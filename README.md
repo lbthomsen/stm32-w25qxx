@@ -1,2 +1,5 @@
 # stm32-w25qxx
-STM32 W25Qxx Driver
+
+Minimal W25Qxx Driver for STM32 HAL
+
+Description: https://stm32world.com/wiki/STM32_W25Qxx
