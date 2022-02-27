@@ -14,7 +14,7 @@
 #define W25QXX_READ_DATA          0x03
 #define W25QXX_WRITE_ENABLE       0x06
 #define W25QXX_PAGE_PROGRAM       0x02
-#define W25QXX_SECTOR_ERASE		  0x20
+#define W25QXX_SECTOR_ERASE	      0x20
 #define W25QXX_READ_REGISTER_1    0x05
 
 typedef struct {
