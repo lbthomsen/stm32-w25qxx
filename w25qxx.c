@@ -212,35 +212,43 @@ W25QXX_result_t w25qxx_erase(W25QXX_HandleTypeDef *w25qxx, uint32_t address,
 
 	DBG("w25qxx_erase");
 
-	W25QXX_result_t ret = W25QXX_Err;
+	W25QXX_result_t ret = W25QXX_Ok;
 
 	// Let's determine the sector start
-	uint32_t start_address = address - (address % w25qxx->sector_size);
+	uint32_t first_sector = address / w25qxx->sector_size;
+	uint32_t last_sector = (address + len) / w25qxx->sector_size;
 
-	DBG("w25qxx_erase: first sector: 0x%08X", start_address);
+	DBG("w25qxx_erase: first sector: 0x%04X", first_sector);
+	DBG("w25qxx_erase: last sector : 0x%04X", last_sector);
 
-	uint32_t number_of_sectors = 1 + len / w25qxx->sector_size;
+	for (uint32_t sector = first_sector; sector <= last_sector; ++sector) {
 
-	DBG("w25qxx_erase: number of sectors: 0x%08X", number_of_sectors);
-
-	for (uint32_t i = 0; i < number_of_sectors; ++i) {
-
-		uint32_t sector_address = start_address + i * w25qxx->sector_size;
-
-		DBG("Erasing sector %lu, starting at: 0x%08X", i, sector_address)
+		DBG("Erasing sector %lu, starting at: 0x%08x", sector, sector * w25qxx->sector_size);
 
 		// First we have to ensure the device is not busy
-//		if (w25qxx_wait_for_ready(w25qxx, HAL_MAX_DELAY) == W25QXX_Ok) {
-//			if (w25qxx_write_enable(w25qxx) == W25QXX_Ok) {
-//
-//			}
-//		} else {
-//			ret = W25QXX_Timeout;
-//		}
+		if (w25qxx_wait_for_ready(w25qxx, HAL_MAX_DELAY) == W25QXX_Ok) {
+			if (w25qxx_write_enable(w25qxx) == W25QXX_Ok) {
+
+				uint32_t sector_start_address = sector * w25qxx->sector_size;
+
+				uint8_t tx[4] = {
+					W25QXX_SECTOR_ERASE,
+					(uint8_t) (sector_start_address >> 16),
+					(uint8_t) (sector_start_address >> 8),
+					(uint8_t) (sector_start_address),
+				};
+
+				cs_on(w25qxx);
+				if (w25qxx_transmit(w25qxx, tx, 4) != W25QXX_Ok) {
+					ret = W25QXX_Err;
+				}
+				cs_off(w25qxx);
+			}
+		} else {
+			ret = W25QXX_Timeout;
+		}
 
 	}
-
-	ret = W25QXX_Ok;
 
 	return ret;
 }
