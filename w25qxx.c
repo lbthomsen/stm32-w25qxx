@@ -152,25 +152,33 @@ W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx,
 
 }
 
-W25QXX_result_t w25qxx_read(W25QXX_HandleTypeDef *w25qxx, uint32_t address,
-		uint8_t *buf, uint32_t len) {
+W25QXX_result_t w25qxx_read(W25QXX_HandleTypeDef *w25qxx, uint32_t address, uint8_t *buf, uint32_t len) {
 
 	DBG("w25qxx_read");
 
-	W25QXX_result_t ret = W25QXX_Err;
+	// Transmit buffer holding command and address
 	uint8_t tx[4] = {
-	W25QXX_READ_DATA, (uint8_t) (address >> 16), (uint8_t) (address >> 8),
-			(uint8_t) (address), };
+	    W25QXX_READ_DATA,
+		(uint8_t) (address >> 16),
+		(uint8_t) (address >> 8),
+		(uint8_t) (address),
+	};
+
+	// First wait for device to get ready
+	if (w25qxx_wait_for_ready(w25qxx, HAL_MAX_DELAY) != W25QXX_Ok) {
+		return W25QXX_Err;
+	}
 
 	cs_on(w25qxx);
 	if (w25qxx_transmit(w25qxx, tx, 4) == W25QXX_Ok) { // size will always be fixed
-		if (w25qxx_receive(w25qxx, buf, len) == W25QXX_Ok) {
-			ret = W25QXX_Ok;
+		if (w25qxx_receive(w25qxx, buf, len) != W25QXX_Ok) {
+			cs_off(w25qxx);
+			return W25QXX_Err;
 		}
 	}
 	cs_off(w25qxx);
 
-	return ret;
+	return W25QXX_Ok;
 }
 
 W25QXX_result_t w25qxx_write(W25QXX_HandleTypeDef *w25qxx, uint32_t address,
@@ -178,33 +186,33 @@ W25QXX_result_t w25qxx_write(W25QXX_HandleTypeDef *w25qxx, uint32_t address,
 
 	DBG("w25qxx_write");
 
-	W25QXX_result_t ret = W25QXX_Err;
-
-	// First we have to ensure the device is not busy
-	if (w25qxx_wait_for_ready(w25qxx, HAL_MAX_DELAY) == W25QXX_Ok) {
-
-		if (w25qxx_write_enable(w25qxx) == W25QXX_Ok) {
-
-			uint8_t tx[4] = {
-			W25QXX_PAGE_PROGRAM, (uint8_t) (address >> 16), (uint8_t) (address
-					>> 8), (uint8_t) (address), };
-
-			cs_on(w25qxx);
-			if (w25qxx_transmit(w25qxx, tx, 4) == W25QXX_Ok) { // size will always be fixed
-				// Now write the buffer
-				if (w25qxx_transmit(w25qxx, buf, len) == W25QXX_Ok) {
-					ret = W25QXX_Ok;
-				}
-			}
-			cs_off(w25qxx);
-
-		}
-
-	} else {
-		ret = W25QXX_Timeout;
+	// First wait for device to get ready
+	if (w25qxx_wait_for_ready(w25qxx, HAL_MAX_DELAY) != W25QXX_Ok) {
+		return W25QXX_Err;
 	}
 
-	return ret;
+	if (w25qxx_write_enable(w25qxx) == W25QXX_Ok) {
+
+		uint8_t tx[4] = {
+			W25QXX_PAGE_PROGRAM,
+			(uint8_t) (address >> 16),
+			(uint8_t) (address >> 8),
+			(uint8_t) (address),
+		};
+
+		cs_on(w25qxx);
+		if (w25qxx_transmit(w25qxx, tx, 4) == W25QXX_Ok) { // size will always be fixed
+			// Now write the buffer
+			if (w25qxx_transmit(w25qxx, buf, len) != W25QXX_Ok) {
+				cs_off(w25qxx);
+				return W25QXX_Err;
+			}
+		}
+		cs_off(w25qxx);
+
+	}
+
+	return W25QXX_Ok;
 }
 
 W25QXX_result_t w25qxx_erase(W25QXX_HandleTypeDef *w25qxx, uint32_t address,
