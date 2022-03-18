@@ -119,7 +119,7 @@ W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx,
 
 			w25qxx->block_size = 0x10000;
 			w25qxx->sector_size = 0x1000;
-			w25qxx->sectors_in_block = 0x0f;
+			w25qxx->sectors_in_block = 0x10;
 			w25qxx->page_size = 0x100;
 			w25qxx->pages_in_sector = 0x10;
 
