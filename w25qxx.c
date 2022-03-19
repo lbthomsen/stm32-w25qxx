@@ -2,6 +2,10 @@
  * Minimal w25qxx library
  *
  * Copyright (c) 2022 Lars Boegild Thomsen <lbthomsen@gmail.com>
+ *
+ * Notice!  The library does _not_ bother ot check that sectors have been erased
+ * before writing.
+ *
  */
 
 #include "main.h"
