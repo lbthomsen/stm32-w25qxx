@@ -12,6 +12,10 @@
 #include "string.h"
 #include "w25qxx.h"
 
+#ifdef DEBUG
+#include "stdio.h"
+#endif
+
 /**
  * Internal functions
  */
@@ -94,7 +98,8 @@ W25QXX_result_t w25qxx_wait_for_ready(W25QXX_HandleTypeDef *w25qxx,
 	W25QXX_result_t ret = W25QXX_Ok;
 	uint32_t begin = HAL_GetTick();
 	uint32_t now = HAL_GetTick();
-	while ((now - begin <= timeout) && (w25qxx_get_status(w25qxx) && 0x01 == 0x01)) {
+	while ((now - begin <= timeout)
+			&& (w25qxx_get_status(w25qxx) && 0x01 == 0x01)) {
 		now = HAL_GetTick();
 	}
 	if (now - begin == timeout)
@@ -112,6 +117,8 @@ W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx,
 	w25qxx->spiHandle = hspi;
 	w25qxx->cs_port = cs_port;
 	w25qxx->cs_pin = cs_pin;
+
+	cs_off(w25qxx);
 
 	uint32_t id = w25qxx_read_id(w25qxx);
 	if (id) {
@@ -156,17 +163,15 @@ W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx,
 
 }
 
-W25QXX_result_t w25qxx_read(W25QXX_HandleTypeDef *w25qxx, uint32_t address, uint8_t *buf, uint32_t len) {
+W25QXX_result_t w25qxx_read(W25QXX_HandleTypeDef *w25qxx, uint32_t address,
+		uint8_t *buf, uint32_t len) {
 
-	DBG("w25qxx_read");
+	DBG("w25qxx_read - address: 0x%08lx, lengh: 0x%04lx", address, len);
 
 	// Transmit buffer holding command and address
 	uint8_t tx[4] = {
-	    W25QXX_READ_DATA,
-		(uint8_t) (address >> 16),
-		(uint8_t) (address >> 8),
-		(uint8_t) (address),
-	};
+	W25QXX_READ_DATA, (uint8_t) (address >> 16), (uint8_t) (address >> 8),
+			(uint8_t) (address), };
 
 	// First wait for device to get ready
 	if (w25qxx_wait_for_ready(w25qxx, HAL_MAX_DELAY) != W25QXX_Ok) {
@@ -188,31 +193,48 @@ W25QXX_result_t w25qxx_read(W25QXX_HandleTypeDef *w25qxx, uint32_t address, uint
 W25QXX_result_t w25qxx_write(W25QXX_HandleTypeDef *w25qxx, uint32_t address,
 		uint8_t *buf, uint32_t len) {
 
-	DBG("w25qxx_write");
+	DBG("w25qxx_write - address 0x%08lx len 0x%04lx", address, len);
 
-	// First wait for device to get ready
-	if (w25qxx_wait_for_ready(w25qxx, HAL_MAX_DELAY) != W25QXX_Ok) {
-		return W25QXX_Err;
-	}
+	// Let's determine the pages
+	uint32_t first_page = address / w25qxx->page_size;
+	uint32_t last_page = (address + len - 1) / w25qxx->page_size;
 
-	if (w25qxx_write_enable(w25qxx) == W25QXX_Ok) {
+	DBG("w25qxx_write %lu pages from %lu to %lu", 1 + last_page - first_page,
+			first_page, last_page);
 
-		uint8_t tx[4] = {
-			W25QXX_PAGE_PROGRAM,
-			(uint8_t) (address >> 16),
-			(uint8_t) (address >> 8),
-			(uint8_t) (address),
-		};
+	for (uint32_t page = first_page; page <= last_page; ++page) {
+		uint32_t buffer_offset = page * w25qxx->page_size;
+		uint32_t start_address = address + buffer_offset;
+		uint32_t end_address = start_address + w25qxx->page_size < address + len ? start_address + w25qxx->page_size - 1 : address + len - 1;
+		uint32_t write_len = end_address - start_address;
 
-		cs_on(w25qxx);
-		if (w25qxx_transmit(w25qxx, tx, 4) == W25QXX_Ok) { // size will always be fixed
-			// Now write the buffer
-			if (w25qxx_transmit(w25qxx, buf, len) != W25QXX_Ok) {
-				cs_off(w25qxx);
-				return W25QXX_Err;
-			}
+		DBG("w25qxx_write: handling page %lu start_address = 0x%08lx end_address = 0x%08lx buffer_offset = 0x%08lx len = %04lx", page, start_address, end_address, buffer_offset, write_len);
+
+		// First wait for device to get ready
+		if (w25qxx_wait_for_ready(w25qxx, HAL_MAX_DELAY) != W25QXX_Ok) {
+			return W25QXX_Err;
 		}
-		cs_off(w25qxx);
+
+		if (w25qxx_write_enable(w25qxx) == W25QXX_Ok) {
+
+			uint8_t tx[4] = {
+					W25QXX_PAGE_PROGRAM,
+					(uint8_t) (start_address >> 16),
+					(uint8_t) (start_address >> 8),
+					(uint8_t) (start_address),
+			};
+
+			cs_on(w25qxx);
+			if (w25qxx_transmit(w25qxx, tx, 4) == W25QXX_Ok) { // size will always be fixed
+				// Now write the buffer
+				if (w25qxx_transmit(w25qxx, buf, write_len) != W25QXX_Ok) {
+					cs_off(w25qxx);
+					return W25QXX_Err;
+				}
+			}
+			cs_off(w25qxx);
+
+		}
 
 	}
 
@@ -222,20 +244,21 @@ W25QXX_result_t w25qxx_write(W25QXX_HandleTypeDef *w25qxx, uint32_t address,
 W25QXX_result_t w25qxx_erase(W25QXX_HandleTypeDef *w25qxx, uint32_t address,
 		uint32_t len) {
 
-	DBG("w25qxx_erase");
+	DBG("w25qxx_erase, address = 0x%08lx len = 0x%04lx", address, len);
 
 	W25QXX_result_t ret = W25QXX_Ok;
 
 	// Let's determine the sector start
 	uint32_t first_sector = address / w25qxx->sector_size;
-	uint32_t last_sector = (address + len) / w25qxx->sector_size;
+	uint32_t last_sector = (address + len - 1) / w25qxx->sector_size;
 
-	DBG("w25qxx_erase: first sector: 0x%04X", first_sector);
-	DBG("w25qxx_erase: last sector : 0x%04X", last_sector);
+	DBG("w25qxx_erase: first sector: 0x%04lx", first_sector);
+	DBG("w25qxx_erase: last sector : 0x%04lx", last_sector);
 
 	for (uint32_t sector = first_sector; sector <= last_sector; ++sector) {
 
-		DBG("Erasing sector %lu, starting at: 0x%08x", sector, sector * w25qxx->sector_size);
+		DBG("Erasing sector %lu, starting at: 0x%08lx", sector,
+				sector * w25qxx->sector_size);
 
 		// First we have to ensure the device is not busy
 		if (w25qxx_wait_for_ready(w25qxx, HAL_MAX_DELAY) == W25QXX_Ok) {
@@ -244,11 +267,9 @@ W25QXX_result_t w25qxx_erase(W25QXX_HandleTypeDef *w25qxx, uint32_t address,
 				uint32_t sector_start_address = sector * w25qxx->sector_size;
 
 				uint8_t tx[4] = {
-					W25QXX_SECTOR_ERASE,
-					(uint8_t) (sector_start_address >> 16),
-					(uint8_t) (sector_start_address >> 8),
-					(uint8_t) (sector_start_address),
-				};
+				W25QXX_SECTOR_ERASE, (uint8_t) (sector_start_address >> 16),
+						(uint8_t) (sector_start_address >> 8),
+						(uint8_t) (sector_start_address), };
 
 				cs_on(w25qxx);
 				if (w25qxx_transmit(w25qxx, tx, 4) != W25QXX_Ok) {
