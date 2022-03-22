@@ -301,3 +301,7 @@ W25QXX_result_t w25qxx_chip_erase(W25QXX_HandleTypeDef *w25qxx) {
 	}
 	return W25QXX_Ok;
 }
+
+/*
+ * vim: ts=4 nowrap
+ */
