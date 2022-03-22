@@ -32,9 +32,9 @@ typedef struct {
 } W25QXX_HandleTypeDef;
 
 typedef enum {
-        W25QXX_Err,
-        W25QXX_Ok,
-		W25QXX_Timeout
+	W25QXX_Ok,
+    W25QXX_Err,
+    W25QXX_Timeout
 } W25QXX_result_t;
 
 W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx, SPI_HandleTypeDef *hspi, GPIO_TypeDef *cs_port, uint16_t cs_pin);

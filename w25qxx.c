@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2022 Lars Boegild Thomsen <lbthomsen@gmail.com>
  *
- * Notice!  The library does _not_ bother ot check that sectors have been erased
+ * Notice!  The library does _not_ bother to check that sectors have been erased
  * before writing.
  *
  */
@@ -31,11 +31,9 @@ static inline void cs_off(W25QXX_HandleTypeDef *w25qxx) {
 /*
  * Transmit data to w25qxx - ignore response
  */
-W25QXX_result_t w25qxx_transmit(W25QXX_HandleTypeDef *w25qxx, uint8_t *buf,
-		uint32_t len) {
+W25QXX_result_t w25qxx_transmit(W25QXX_HandleTypeDef *w25qxx, uint8_t *buf, uint32_t len) {
 	W25QXX_result_t ret = W25QXX_Err;
-	if (HAL_SPI_Transmit(w25qxx->spiHandle, buf, len, HAL_MAX_DELAY)
-			== HAL_OK) {
+	if (HAL_SPI_Transmit(w25qxx->spiHandle, buf, len, HAL_MAX_DELAY) == HAL_OK) {
 		ret = W25QXX_Ok;
 	}
 	return ret;
@@ -44,8 +42,7 @@ W25QXX_result_t w25qxx_transmit(W25QXX_HandleTypeDef *w25qxx, uint8_t *buf,
 /*
  * Receive data from w25qxx
  */
-W25QXX_result_t w25qxx_receive(W25QXX_HandleTypeDef *w25qxx, uint8_t *buf,
-		uint32_t len) {
+W25QXX_result_t w25qxx_receive(W25QXX_HandleTypeDef *w25qxx, uint8_t *buf, uint32_t len) {
 	W25QXX_result_t ret = W25QXX_Err;
 	if (HAL_SPI_Receive(w25qxx->spiHandle, buf, len, HAL_MAX_DELAY) == HAL_OK) {
 		ret = W25QXX_Ok;
@@ -199,13 +196,14 @@ W25QXX_result_t w25qxx_write(W25QXX_HandleTypeDef *w25qxx, uint32_t address,
 	uint32_t first_page = address / w25qxx->page_size;
 	uint32_t last_page = (address + len - 1) / w25qxx->page_size;
 
-	DBG("w25qxx_write %lu pages from %lu to %lu", 1 + last_page - first_page,
-			first_page, last_page);
+	DBG("w25qxx_write %lu pages from %lu to %lu", 1 + last_page - first_page, first_page, last_page);
+
+	uint32_t buffer_offset = 0;
+	uint32_t start_address = address;
 
 	for (uint32_t page = first_page; page <= last_page; ++page) {
-		uint32_t buffer_offset = page * w25qxx->page_size;
-		uint32_t start_address = address + buffer_offset;
-		uint32_t end_address = start_address + w25qxx->page_size < address + len ? start_address + w25qxx->page_size - 1 : address + len - 1;
+
+		uint32_t end_address = page < last_page ? start_address + w25qxx->page_size : address + len;
 		uint32_t write_len = end_address - start_address;
 
 		DBG("w25qxx_write: handling page %lu start_address = 0x%08lx end_address = 0x%08lx buffer_offset = 0x%08lx len = %04lx", page, start_address, end_address, buffer_offset, write_len);
@@ -235,6 +233,9 @@ W25QXX_result_t w25qxx_write(W25QXX_HandleTypeDef *w25qxx, uint32_t address,
 			cs_off(w25qxx);
 
 		}
+
+		start_address += w25qxx->page_size;
+		buffer_offset += w25qxx->page_size;
 
 	}
 
