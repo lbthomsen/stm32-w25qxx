@@ -20,10 +20,22 @@
  * Internal functions
  */
 
+/**
+  * @brief  Enables CS (driving it low) of the W25Qxx
+  *
+  * @param  Initialize W25Qxx handle
+  * @retval None
+  */
 static inline void cs_on(W25QXX_HandleTypeDef *w25qxx) {
 	HAL_GPIO_WritePin(w25qxx->cs_port, w25qxx->cs_pin, GPIO_PIN_RESET);
 }
 
+/**
+  * @brief  Disables CS (driving it high) of the W25Qxx
+  *
+  * @param  Initialize W25Qxx handle
+  * @retval None
+  */
 static inline void cs_off(W25QXX_HandleTypeDef *w25qxx) {
 	HAL_GPIO_WritePin(w25qxx->cs_port, w25qxx->cs_pin, GPIO_PIN_SET);
 }
@@ -122,6 +134,24 @@ W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx,
 		w25qxx->device_id = (uint16_t) (id & 0xFFFF);
 
 		switch (w25qxx->manufacturer_id) {
+		case W25QXX_MANUFACTURER_GIGADEVICE:
+
+			w25qxx->block_size = 0x10000;
+			w25qxx->sector_size = 0x1000;
+			w25qxx->sectors_in_block = 0x10;
+			w25qxx->page_size = 0x100;
+			w25qxx->pages_in_sector = 0x10;
+
+			switch (w25qxx->device_id) {
+			case 0x6017:
+				w25qxx->block_count = 0x80;
+				break;
+			default:
+				W25_DBG("Unknown Giga Device device");
+				result = W25QXX_Err;
+			}
+
+			break;
 		case W25QXX_MANUFACTURER_WINBOND:
 
 			w25qxx->block_size = 0x10000;

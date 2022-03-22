@@ -7,13 +7,14 @@
 #ifndef W25QXX_H_
 #define W25QXX_H_
 
-#ifdef DEBUGXX
+#ifdef DEBUGxxx
 #define W25_DBG(...) printf(__VA_ARGS__);\
                      printf("\n");
 #else
 #define W25_DBG(...) ;
 #endif
 
+#define W25QXX_MANUFACTURER_GIGADEVICE 0xC8
 #define W25QXX_MANUFACTURER_WINBOND 0xEF
 
 #define W25QXX_DUMMY_BYTE         0xA5
