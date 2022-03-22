@@ -78,7 +78,7 @@ uint8_t w25qxx_get_status(W25QXX_HandleTypeDef *w25qxx) {
 }
 
 W25QXX_result_t w25qxx_write_enable(W25QXX_HandleTypeDef *w25qxx) {
-	DBG("w25qxx_write_enable");
+	W25_DBG("w25qxx_write_enable");
 	W25QXX_result_t ret = W25QXX_Err;
 	uint8_t buf[1];
 	cs_on(w25qxx);
@@ -109,7 +109,7 @@ W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx,
 
 	W25QXX_result_t result = W25QXX_Ok;
 
-	DBG("w25qxx_init");
+	W25_DBG("w25qxx_init");
 
 	w25qxx->spiHandle = hspi;
 	w25qxx->cs_port = cs_port;
@@ -136,15 +136,13 @@ W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx,
 				w25qxx->block_count = 0x100;
 				break;
 			default:
-				DBG("Unknown Winbond device")
-				;
+				W25_DBG("Unknown Winbond device");
 				result = W25QXX_Err;
 			}
 
 			break;
 		default:
-			DBG("Unknown manufacturer")
-			;
+			W25_DBG("Unknown manufacturer");
 			result = W25QXX_Err;
 		}
 	} else {
@@ -163,7 +161,7 @@ W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx,
 W25QXX_result_t w25qxx_read(W25QXX_HandleTypeDef *w25qxx, uint32_t address,
 		uint8_t *buf, uint32_t len) {
 
-	DBG("w25qxx_read - address: 0x%08lx, lengh: 0x%04lx", address, len);
+	W25_DBG("w25qxx_read - address: 0x%08lx, lengh: 0x%04lx", address, len);
 
 	// Transmit buffer holding command and address
 	uint8_t tx[4] = {
@@ -190,13 +188,13 @@ W25QXX_result_t w25qxx_read(W25QXX_HandleTypeDef *w25qxx, uint32_t address,
 W25QXX_result_t w25qxx_write(W25QXX_HandleTypeDef *w25qxx, uint32_t address,
 		uint8_t *buf, uint32_t len) {
 
-	DBG("w25qxx_write - address 0x%08lx len 0x%04lx", address, len);
+	W25_DBG("w25qxx_write - address 0x%08lx len 0x%04lx", address, len);
 
 	// Let's determine the pages
 	uint32_t first_page = address / w25qxx->page_size;
 	uint32_t last_page = (address + len - 1) / w25qxx->page_size;
 
-	DBG("w25qxx_write %lu pages from %lu to %lu", 1 + last_page - first_page, first_page, last_page);
+	W25_DBG("w25qxx_write %lu pages from %lu to %lu", 1 + last_page - first_page, first_page, last_page);
 
 	uint32_t buffer_offset = 0;
 	uint32_t start_address = address;
@@ -206,7 +204,7 @@ W25QXX_result_t w25qxx_write(W25QXX_HandleTypeDef *w25qxx, uint32_t address,
 		uint32_t end_address = page < last_page ? start_address + w25qxx->page_size : address + len;
 		uint32_t write_len = end_address - start_address;
 
-		DBG("w25qxx_write: handling page %lu start_address = 0x%08lx end_address = 0x%08lx buffer_offset = 0x%08lx len = %04lx", page, start_address, end_address, buffer_offset, write_len);
+		W25_DBG("w25qxx_write: handling page %lu start_address = 0x%08lx end_address = 0x%08lx buffer_offset = 0x%08lx len = %04lx", page, start_address, end_address, buffer_offset, write_len);
 
 		// First wait for device to get ready
 		if (w25qxx_wait_for_ready(w25qxx, HAL_MAX_DELAY) != W25QXX_Ok) {
@@ -245,7 +243,7 @@ W25QXX_result_t w25qxx_write(W25QXX_HandleTypeDef *w25qxx, uint32_t address,
 W25QXX_result_t w25qxx_erase(W25QXX_HandleTypeDef *w25qxx, uint32_t address,
 		uint32_t len) {
 
-	DBG("w25qxx_erase, address = 0x%08lx len = 0x%04lx", address, len);
+	W25_DBG("w25qxx_erase, address = 0x%08lx len = 0x%04lx", address, len);
 
 	W25QXX_result_t ret = W25QXX_Ok;
 
@@ -253,12 +251,12 @@ W25QXX_result_t w25qxx_erase(W25QXX_HandleTypeDef *w25qxx, uint32_t address,
 	uint32_t first_sector = address / w25qxx->sector_size;
 	uint32_t last_sector = (address + len - 1) / w25qxx->sector_size;
 
-	DBG("w25qxx_erase: first sector: 0x%04lx", first_sector);
-	DBG("w25qxx_erase: last sector : 0x%04lx", last_sector);
+	W25_DBG("w25qxx_erase: first sector: 0x%04lx", first_sector);
+	W25_DBG("w25qxx_erase: last sector : 0x%04lx", last_sector);
 
 	for (uint32_t sector = first_sector; sector <= last_sector; ++sector) {
 
-		DBG("Erasing sector %lu, starting at: 0x%08lx", sector,
+		W25_DBG("Erasing sector %lu, starting at: 0x%08lx", sector,
 				sector * w25qxx->sector_size);
 
 		// First we have to ensure the device is not busy
@@ -285,4 +283,21 @@ W25QXX_result_t w25qxx_erase(W25QXX_HandleTypeDef *w25qxx, uint32_t address,
 	}
 
 	return ret;
+}
+
+W25QXX_result_t w25qxx_chip_erase(W25QXX_HandleTypeDef *w25qxx) {
+	if (w25qxx_write_enable(w25qxx) == W25QXX_Ok) {
+		uint8_t tx[1] = {
+				W25QXX_CHIP_ERASE
+		};
+		cs_on(w25qxx);
+		if (w25qxx_transmit(w25qxx, tx, 1) != W25QXX_Ok) {
+			return W25QXX_Err;
+		}
+		cs_off(w25qxx);
+		if (w25qxx_wait_for_ready(w25qxx, HAL_MAX_DELAY) != W25QXX_Ok) {
+			return W25QXX_Err;
+		}
+	}
+	return W25QXX_Ok;
 }

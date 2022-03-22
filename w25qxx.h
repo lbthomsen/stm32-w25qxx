@@ -7,6 +7,13 @@
 #ifndef W25QXX_H_
 #define W25QXX_H_
 
+#ifdef DEBUGXX
+#define W25_DBG(...) printf(__VA_ARGS__);\
+                     printf("\n");
+#else
+#define W25_DBG(...) ;
+#endif
+
 #define W25QXX_MANUFACTURER_WINBOND 0xEF
 
 #define W25QXX_DUMMY_BYTE         0xA5
@@ -15,6 +22,7 @@
 #define W25QXX_WRITE_ENABLE       0x06
 #define W25QXX_PAGE_PROGRAM       0x02
 #define W25QXX_SECTOR_ERASE	      0x20
+#define W25QXX_CHIP_ERASE         0xc7
 #define W25QXX_READ_REGISTER_1    0x05
 
 typedef struct {
@@ -41,5 +49,6 @@ W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx, SPI_HandleTypeDef *hsp
 W25QXX_result_t w25qxx_read(W25QXX_HandleTypeDef *w25qxx, uint32_t address, uint8_t *buf, uint32_t len);
 W25QXX_result_t w25qxx_write(W25QXX_HandleTypeDef *w25qxx, uint32_t address, uint8_t *buf, uint32_t len);
 W25QXX_result_t w25qxx_erase(W25QXX_HandleTypeDef *w25qxx, uint32_t address, uint32_t len);
+W25QXX_result_t w25qxx_chip_erase(W25QXX_HandleTypeDef *w25qxx);
 
 #endif /* W25QXX_H_ */
