@@ -27,21 +27,21 @@
 #define W25QXX_READ_REGISTER_1    0x05
 
 typedef struct {
-	SPI_HandleTypeDef *spiHandle;
-	GPIO_TypeDef *cs_port;
-	uint16_t cs_pin;
-	uint8_t manufacturer_id;
-	uint16_t device_id;
-	uint32_t block_size;
-	uint32_t block_count;
-	uint32_t sector_size;
-	uint32_t sectors_in_block;
-	uint32_t page_size;
-	uint32_t pages_in_sector;
+    SPI_HandleTypeDef *spiHandle;
+    GPIO_TypeDef *cs_port;
+    uint16_t cs_pin;
+    uint8_t manufacturer_id;
+    uint16_t device_id;
+    uint32_t block_size;
+    uint32_t block_count;
+    uint32_t sector_size;
+    uint32_t sectors_in_block;
+    uint32_t page_size;
+    uint32_t pages_in_sector;
 } W25QXX_HandleTypeDef;
 
 typedef enum {
-	W25QXX_Ok,     // 0
+    W25QXX_Ok,     // 0
     W25QXX_Err,    // 1
     W25QXX_Timeout // 2
 } W25QXX_result_t;
@@ -53,3 +53,7 @@ W25QXX_result_t w25qxx_erase(W25QXX_HandleTypeDef *w25qxx, uint32_t address, uin
 W25QXX_result_t w25qxx_chip_erase(W25QXX_HandleTypeDef *w25qxx);
 
 #endif /* W25QXX_H_ */
+
+/*
+ * vim: ts=4 et nowrap
+ */
