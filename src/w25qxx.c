@@ -9,21 +9,21 @@
  */
 
 #include "main.h"
-#include "string.h"
 #include "w25qxx.h"
+#include <string.h>
 
 #ifdef DEBUG
-#include "stdio.h"
+#include <stdio.h>
 #endif
 
-/**
+/*
  * Internal functions
  */
 
 /**
  * @brief  Enables CS (driving it low) of the W25Qxx
  *
- * @param  Initialize W25Qxx handle
+ * @param  W25Qxx handle
  * @retval None
  */
 static inline void cs_on(W25QXX_HandleTypeDef *w25qxx) {
@@ -33,15 +33,20 @@ static inline void cs_on(W25QXX_HandleTypeDef *w25qxx) {
 /**
  * @brief  Disables CS (driving it high) of the W25Qxx
  *
- * @param  Initialize W25Qxx handle
+ * @param  W25Qxx handle
  * @retval None
  */
 static inline void cs_off(W25QXX_HandleTypeDef *w25qxx) {
     HAL_GPIO_WritePin(w25qxx->cs_port, w25qxx->cs_pin, GPIO_PIN_SET);
 }
 
-/*
- * Transmit data to w25qxx - ignore response
+/**
+ * @brief  Transmit data to w25qxx - ignore returned data
+ *
+ * @param  W25Qxx handle
+ * @param  Pointer to buffer with data to transmit
+ * @param  Length (in bytes) of data to be transmitted
+ * @retval None
  */
 W25QXX_result_t w25qxx_transmit(W25QXX_HandleTypeDef *w25qxx, uint8_t *buf, uint32_t len) {
     W25QXX_result_t ret = W25QXX_Err;
