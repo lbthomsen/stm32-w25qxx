@@ -150,8 +150,7 @@ W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx, SPI_HandleTypeDef *hsp
                 w25qxx->block_count = 0x80;
                 break;
             default:
-                W25_DBG("Unknown Giga Device device")
-                ;
+                W25_DBG("Unknown Giga Device device");
                 result = W25QXX_Err;
             }
 
@@ -175,8 +174,7 @@ W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx, SPI_HandleTypeDef *hsp
 
             break;
         default:
-            W25_DBG("Unknown manufacturer")
-            ;
+            W25_DBG("Unknown manufacturer");
             result = W25QXX_Err;
         }
     } else {
@@ -232,7 +230,7 @@ W25QXX_result_t w25qxx_write(W25QXX_HandleTypeDef *w25qxx, uint32_t address, uin
 
     for (uint32_t page = first_page; page <= last_page; ++page) {
 
-        uint32_t write_len = w25qxx->page_size - (start_address & (w25qxx->page_size-1));
+        uint32_t write_len = w25qxx->page_size - (start_address & (w25qxx->page_size - 1));
         write_len = len > write_len ? write_len : len;
 
         W25_DBG("w25qxx_write: handling page %lu start_address = 0x%08lx buffer_offset = 0x%08lx len = %04lx", page, start_address, buffer_offset, write_len);
@@ -250,7 +248,7 @@ W25QXX_result_t w25qxx_write(W25QXX_HandleTypeDef *w25qxx, uint32_t address, uin
             cs_on(w25qxx);
             if (w25qxx_transmit(w25qxx, tx, 4) == W25QXX_Ok) { // size will always be fixed
                 // Now write the buffer
-                if (w25qxx_transmit(w25qxx, buf+buffer_offset, write_len) != W25QXX_Ok) {
+                if (w25qxx_transmit(w25qxx, buf + buffer_offset, write_len) != W25QXX_Ok) {
                     cs_off(w25qxx);
                     return W25QXX_Err;
                 }

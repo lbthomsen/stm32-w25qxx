@@ -9,9 +9,9 @@
 
 #ifdef DEBUGxxx
 #define W25_DBG(...) printf(__VA_ARGS__);\
-                     printf("\n");
+                     printf("\n")
 #else
-#define W25_DBG(...) ;
+#define W25_DBG(...)
 #endif
 
 #define W25QXX_MANUFACTURER_GIGADEVICE 0xC8

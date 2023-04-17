@@ -349,32 +349,31 @@ int main(void)
             res = w25qxx_read(&w25qxx, offset_address, (uint8_t*) &buf, sizeof(buf));
             if (res == W25QXX_Ok) {
                 //dump_hex("First page at start", offset_address, (uint8_t*) &buf, sizeof(buf));
-                DBG("Value before: 0x%08lx", HAL_CRC_Calculate(&hcrc, &buf, sizeof(buf)));
+                DBG("Value before: 0x%08lx", HAL_CRC_Calculate(&hcrc, &buf, sizeof(buf) / 4));
             } else {
                 DBG("Unable to read w25qxx");
             }
 
-            //        DBG("Erasing first page");
-            //        if (w25qxx_erase(&w25qxx, 0, sizeof(buf)) == W25QXX_Ok) {
-            //            DBG("Reading first page");
-            //            if (w25qxx_read(&w25qxx, 0, (uint8_t*) &buf, sizeof(buf)) == W25QXX_Ok) {
-            //                dump_hex("After erase", 0, (uint8_t*) &buf, sizeof(buf));
-            //            }
-            //        }
-            //
-            //        // Create a well known pattern
-            //        fill_buffer(run, buf, sizeof(buf));
-            //
-            //        // Write it to device
-            //        DBG("Writing first page");
-            //        if (w25qxx_write(&w25qxx, 0, (uint8_t*) &buf, sizeof(buf)) == W25QXX_Ok) {
-            //            // now read it back
-            //            DBG("Reading first page");
-            //            if (w25qxx_read(&w25qxx, 0, (uint8_t*) &buf, sizeof(buf)) == W25QXX_Ok) {
-            //                //DBG("  - sum = %lu", get_sum(buf, 256));
-            //                dump_hex("After write", 0, (uint8_t*) &buf, sizeof(buf));
-            //            }
-            //        }
+            DBG("Erasing page");
+            if (w25qxx_erase(&w25qxx, offset_address, sizeof(buf)) == W25QXX_Ok) {
+                DBG("Re-reading page");
+                if (w25qxx_read(&w25qxx, offset_address, (uint8_t*) &buf, sizeof(buf)) == W25QXX_Ok) {
+                    DBG("After erase: 0x%08lx", HAL_CRC_Calculate(&hcrc, &buf, sizeof(buf) / 4));
+                }
+            }
+
+            // Create a well known pattern
+            fill_buffer(2, buf, sizeof(buf));
+
+            // Write it to device
+            DBG("Writing page with value 0x%08lx", HAL_CRC_Calculate(&hcrc, &buf, sizeof(buf) / 4));
+            if (w25qxx_write(&w25qxx, offset_address, (uint8_t*) &buf, sizeof(buf)) == W25QXX_Ok) {
+                // now read it back
+                //DBG("Reading page");
+                if (w25qxx_read(&w25qxx, 0, (uint8_t*) &buf, sizeof(buf)) == W25QXX_Ok) {
+                    DBG("After read: 0x%08lx", HAL_CRC_Calculate(&hcrc, &buf, sizeof(buf) / 4));
+                }
+            }
 
             offset_address += 0x20;
 
