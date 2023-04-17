@@ -342,23 +342,22 @@ int main(void)
             last_blink = now;
         }
 
-        if (now - last_test >= 5000) {
+        if (now - last_test >= 1000) {
 
-            DBG("Reading page at 0x%08lx", offset_address);
+            DBG("---------------\nReading page at address     : 0x%08lx", offset_address);
 
             res = w25qxx_read(&w25qxx, offset_address, (uint8_t*) &buf, sizeof(buf));
             if (res == W25QXX_Ok) {
                 //dump_hex("First page at start", offset_address, (uint8_t*) &buf, sizeof(buf));
-                DBG("Value before: 0x%08lx", HAL_CRC_Calculate(&hcrc, &buf, sizeof(buf) / 4));
+                DBG("Reading old value           : 0x%08lx", HAL_CRC_Calculate(&hcrc, &buf, sizeof(buf) / 4));
             } else {
                 DBG("Unable to read w25qxx");
             }
 
-            DBG("Erasing page");
+            // DBG("Erasing page");
             if (w25qxx_erase(&w25qxx, offset_address, sizeof(buf)) == W25QXX_Ok) {
-                DBG("Re-reading page");
                 if (w25qxx_read(&w25qxx, offset_address, (uint8_t*) &buf, sizeof(buf)) == W25QXX_Ok) {
-                    DBG("After erase: 0x%08lx", HAL_CRC_Calculate(&hcrc, &buf, sizeof(buf) / 4));
+                    DBG("After erase                 : 0x%08lx", HAL_CRC_Calculate(&hcrc, &buf, sizeof(buf) / 4));
                 }
             }
 
@@ -366,14 +365,16 @@ int main(void)
             fill_buffer(2, buf, sizeof(buf));
 
             // Write it to device
-            DBG("Writing page with value 0x%08lx", HAL_CRC_Calculate(&hcrc, &buf, sizeof(buf) / 4));
+            DBG("Writing page value          : 0x%08lx", HAL_CRC_Calculate(&hcrc, &buf, sizeof(buf) / 4));
             if (w25qxx_write(&w25qxx, offset_address, (uint8_t*) &buf, sizeof(buf)) == W25QXX_Ok) {
                 // now read it back
                 //DBG("Reading page");
-                if (w25qxx_read(&w25qxx, 0, (uint8_t*) &buf, sizeof(buf)) == W25QXX_Ok) {
-                    DBG("After read: 0x%08lx", HAL_CRC_Calculate(&hcrc, &buf, sizeof(buf) / 4));
+                if (w25qxx_read(&w25qxx, offset_address, (uint8_t*) &buf, sizeof(buf)) == W25QXX_Ok) {
+                    DBG("Reading back                : 0x%08lx", HAL_CRC_Calculate(&hcrc, &buf, sizeof(buf) / 4));
                 }
             }
+
+            DBG("Test time                   : %lu ms", HAL_GetTick() - now);
 
             offset_address += 0x20;
 
