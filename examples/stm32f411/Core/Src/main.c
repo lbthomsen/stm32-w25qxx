@@ -43,6 +43,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+CRC_HandleTypeDef hcrc;
+
 SPI_HandleTypeDef hspi1;
 
 UART_HandleTypeDef huart1;
@@ -58,6 +60,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_CRC_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -189,6 +192,7 @@ int main(void)
   MX_GPIO_Init();
   MX_SPI1_Init();
   MX_USART1_UART_Init();
+  MX_CRC_Init();
   /* USER CODE BEGIN 2 */
 
     DBG("\n\n\n--------\nCore and peripherals has been initialised");
@@ -215,117 +219,117 @@ int main(void)
 
     uint8_t buf[w25qxx.page_size]; // Buffer the size of a page
 
-    for (uint8_t run = 0; run <= 2; ++run) {
-
-        DBG("\n-------------\nRun %d", run);
-
-        DBG("Reading first page");
-
-        res = w25qxx_read(&w25qxx, 0, (uint8_t*) &buf, sizeof(buf));
-        if (res == W25QXX_Ok) {
-            dump_hex("First page at start", 0, (uint8_t*) &buf, sizeof(buf));
-        } else {
-            DBG("Unable to read w25qxx");
-        }
-
-        DBG("Erasing first page");
-        if (w25qxx_erase(&w25qxx, 0, sizeof(buf)) == W25QXX_Ok) {
-            DBG("Reading first page");
-            if (w25qxx_read(&w25qxx, 0, (uint8_t*) &buf, sizeof(buf)) == W25QXX_Ok) {
-                dump_hex("After erase", 0, (uint8_t*) &buf, sizeof(buf));
-            }
-        }
-
-        // Create a well known pattern
-        fill_buffer(run, buf, sizeof(buf));
-
-        // Write it to device
-        DBG("Writing first page");
-        if (w25qxx_write(&w25qxx, 0, (uint8_t*) &buf, sizeof(buf)) == W25QXX_Ok) {
-            // now read it back
-            DBG("Reading first page");
-            if (w25qxx_read(&w25qxx, 0, (uint8_t*) &buf, sizeof(buf)) == W25QXX_Ok) {
-                //DBG("  - sum = %lu", get_sum(buf, 256));
-                dump_hex("After write", 0, (uint8_t*) &buf, sizeof(buf));
-            }
-        }
-    }
-
-    // Let's do a stress test
-    uint32_t start;
-    uint32_t sectors = w25qxx.block_count * w25qxx.sectors_in_block; // Entire chip
-
-    DBG("Stress testing w25qxx device: sectors = %lu", sectors);
-
-    DBG("Doing chip erase");
-    start = HAL_GetTick();
-    w25qxx_chip_erase(&w25qxx);
-    DBG("Done erasing - took %lu ms", HAL_GetTick() - start);
-
-    fill_buffer(0, buf, sizeof(buf));
-
-    DBG("Writing all zeroes %lu sectors", sectors);
-    start = HAL_GetTick();
-    for (uint32_t i = 0; i < sectors; ++i) {
-        w25qxx_write(&w25qxx, i * w25qxx.sector_size, buf, sizeof(buf));
-    }
-    DBG("Done writing - took %lu ms", HAL_GetTick() - start);
-
-    DBG("Reading %lu sectors", sectors);
-    start = HAL_GetTick();
-    for (uint32_t i = 0; i < sectors; ++i) {
-        w25qxx_read(&w25qxx, i * w25qxx.sector_size, buf, sizeof(buf));
-    }
-    DBG("Done reading - took %lu ms", HAL_GetTick() - start);
-
-    DBG("Validating buffer");
-    if (check_buffer(0, buf, sizeof(buf))) {
-        DBG("OK");
-    } else {
-        DBG("Not OK");
-    }
-
-    DBG("Doing chip erase");
-    start = HAL_GetTick();
-    w25qxx_chip_erase(&w25qxx);
-    DBG("Done erasing - took %lu ms", HAL_GetTick() - start);
-
-    fill_buffer(1, buf, sizeof(buf));
-
-    DBG("Writing 10101010 %lu sectors", sectors);
-    start = HAL_GetTick();
-    for (uint32_t i = 0; i < sectors; ++i) {
-        w25qxx_write(&w25qxx, i * w25qxx.sector_size, buf, sizeof(buf));
-    }
-    DBG("Done writing - took %lu ms", HAL_GetTick() - start);
-
-    DBG("Reading %lu sectors", sectors);
-    start = HAL_GetTick();
-    for (uint32_t i = 0; i < sectors; ++i) {
-        w25qxx_read(&w25qxx, i * w25qxx.sector_size, buf, sizeof(buf));
-    }
-    DBG("Done reading - took %lu ms", HAL_GetTick() - start);
-
-    DBG("Validating buffer");
-    if (check_buffer(1, buf, sizeof(buf))) {
-        DBG("OK");
-    } else {
-        DBG("Not OK");
-    }
-
-    DBG("Erasing %lu sectors sequentially", sectors);
-    start = HAL_GetTick();
-    for (uint32_t i = 0; i < sectors; ++i) {
-        w25qxx_erase(&w25qxx, i * w25qxx.sector_size, sizeof(buf));
-    }
-    DBG("Done erasing - took %lu ms", HAL_GetTick() - start);
+//    for (uint8_t run = 0; run <= 2; ++run) {
+//
+//        DBG("\n-------------\nRun %d", run);
+//
+//        DBG("Reading first page");
+//
+//        res = w25qxx_read(&w25qxx, 0, (uint8_t*) &buf, sizeof(buf));
+//        if (res == W25QXX_Ok) {
+//            dump_hex("First page at start", 0, (uint8_t*) &buf, sizeof(buf));
+//        } else {
+//            DBG("Unable to read w25qxx");
+//        }
+//
+//        DBG("Erasing first page");
+//        if (w25qxx_erase(&w25qxx, 0, sizeof(buf)) == W25QXX_Ok) {
+//            DBG("Reading first page");
+//            if (w25qxx_read(&w25qxx, 0, (uint8_t*) &buf, sizeof(buf)) == W25QXX_Ok) {
+//                dump_hex("After erase", 0, (uint8_t*) &buf, sizeof(buf));
+//            }
+//        }
+//
+//        // Create a well known pattern
+//        fill_buffer(run, buf, sizeof(buf));
+//
+//        // Write it to device
+//        DBG("Writing first page");
+//        if (w25qxx_write(&w25qxx, 0, (uint8_t*) &buf, sizeof(buf)) == W25QXX_Ok) {
+//            // now read it back
+//            DBG("Reading first page");
+//            if (w25qxx_read(&w25qxx, 0, (uint8_t*) &buf, sizeof(buf)) == W25QXX_Ok) {
+//                //DBG("  - sum = %lu", get_sum(buf, 256));
+//                dump_hex("After write", 0, (uint8_t*) &buf, sizeof(buf));
+//            }
+//        }
+//    }
+//
+//    // Let's do a stress test
+//    uint32_t start;
+//    uint32_t sectors = w25qxx.block_count * w25qxx.sectors_in_block; // Entire chip
+//
+//    DBG("Stress testing w25qxx device: sectors = %lu", sectors);
+//
+//    DBG("Doing chip erase");
+//    start = HAL_GetTick();
+//    w25qxx_chip_erase(&w25qxx);
+//    DBG("Done erasing - took %lu ms", HAL_GetTick() - start);
+//
+//    fill_buffer(0, buf, sizeof(buf));
+//
+//    DBG("Writing all zeroes %lu sectors", sectors);
+//    start = HAL_GetTick();
+//    for (uint32_t i = 0; i < sectors; ++i) {
+//        w25qxx_write(&w25qxx, i * w25qxx.sector_size, buf, sizeof(buf));
+//    }
+//    DBG("Done writing - took %lu ms", HAL_GetTick() - start);
+//
+//    DBG("Reading %lu sectors", sectors);
+//    start = HAL_GetTick();
+//    for (uint32_t i = 0; i < sectors; ++i) {
+//        w25qxx_read(&w25qxx, i * w25qxx.sector_size, buf, sizeof(buf));
+//    }
+//    DBG("Done reading - took %lu ms", HAL_GetTick() - start);
+//
+//    DBG("Validating buffer");
+//    if (check_buffer(0, buf, sizeof(buf))) {
+//        DBG("OK");
+//    } else {
+//        DBG("Not OK");
+//    }
+//
+//    DBG("Doing chip erase");
+//    start = HAL_GetTick();
+//    w25qxx_chip_erase(&w25qxx);
+//    DBG("Done erasing - took %lu ms", HAL_GetTick() - start);
+//
+//    fill_buffer(1, buf, sizeof(buf));
+//
+//    DBG("Writing 10101010 %lu sectors", sectors);
+//    start = HAL_GetTick();
+//    for (uint32_t i = 0; i < sectors; ++i) {
+//        w25qxx_write(&w25qxx, i * w25qxx.sector_size, buf, sizeof(buf));
+//    }
+//    DBG("Done writing - took %lu ms", HAL_GetTick() - start);
+//
+//    DBG("Reading %lu sectors", sectors);
+//    start = HAL_GetTick();
+//    for (uint32_t i = 0; i < sectors; ++i) {
+//        w25qxx_read(&w25qxx, i * w25qxx.sector_size, buf, sizeof(buf));
+//    }
+//    DBG("Done reading - took %lu ms", HAL_GetTick() - start);
+//
+//    DBG("Validating buffer");
+//    if (check_buffer(1, buf, sizeof(buf))) {
+//        DBG("OK");
+//    } else {
+//        DBG("Not OK");
+//    }
+//
+//    DBG("Erasing %lu sectors sequentially", sectors);
+//    start = HAL_GetTick();
+//    for (uint32_t i = 0; i < sectors; ++i) {
+//        w25qxx_erase(&w25qxx, i * w25qxx.sector_size, sizeof(buf));
+//    }
+//    DBG("Done erasing - took %lu ms", HAL_GetTick() - start);
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-    uint32_t now = 0, last_blink = 0;
+    uint32_t now = 0, last_blink = 0, last_test = 0, offset_address = 0;
 
     while (1) {
 
@@ -336,6 +340,45 @@ int main(void)
             HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 
             last_blink = now;
+        }
+
+        if (now - last_test >= 5000) {
+
+            DBG("Reading page at 0x%08lx", offset_address);
+
+            res = w25qxx_read(&w25qxx, offset_address, (uint8_t*) &buf, sizeof(buf));
+            if (res == W25QXX_Ok) {
+                //dump_hex("First page at start", offset_address, (uint8_t*) &buf, sizeof(buf));
+                DBG("Value before: 0x%08lx", HAL_CRC_Calculate(&hcrc, &buf, sizeof(buf)));
+            } else {
+                DBG("Unable to read w25qxx");
+            }
+
+            //        DBG("Erasing first page");
+            //        if (w25qxx_erase(&w25qxx, 0, sizeof(buf)) == W25QXX_Ok) {
+            //            DBG("Reading first page");
+            //            if (w25qxx_read(&w25qxx, 0, (uint8_t*) &buf, sizeof(buf)) == W25QXX_Ok) {
+            //                dump_hex("After erase", 0, (uint8_t*) &buf, sizeof(buf));
+            //            }
+            //        }
+            //
+            //        // Create a well known pattern
+            //        fill_buffer(run, buf, sizeof(buf));
+            //
+            //        // Write it to device
+            //        DBG("Writing first page");
+            //        if (w25qxx_write(&w25qxx, 0, (uint8_t*) &buf, sizeof(buf)) == W25QXX_Ok) {
+            //            // now read it back
+            //            DBG("Reading first page");
+            //            if (w25qxx_read(&w25qxx, 0, (uint8_t*) &buf, sizeof(buf)) == W25QXX_Ok) {
+            //                //DBG("  - sum = %lu", get_sum(buf, 256));
+            //                dump_hex("After write", 0, (uint8_t*) &buf, sizeof(buf));
+            //            }
+            //        }
+
+            offset_address += 0x20;
+
+            last_test = now;
         }
 
     /* USER CODE END WHILE */
@@ -388,6 +431,32 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief CRC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CRC_Init(void)
+{
+
+  /* USER CODE BEGIN CRC_Init 0 */
+
+  /* USER CODE END CRC_Init 0 */
+
+  /* USER CODE BEGIN CRC_Init 1 */
+
+  /* USER CODE END CRC_Init 1 */
+  hcrc.Instance = CRC;
+  if (HAL_CRC_Init(&hcrc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CRC_Init 2 */
+
+  /* USER CODE END CRC_Init 2 */
+
 }
 
 /**
