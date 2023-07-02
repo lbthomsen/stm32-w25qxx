@@ -1,11 +1,21 @@
-/*
- * Minimal w25qxx library
+/**
+ ******************************************************************************
+ * @file           : w25qxx.h
+ * @brief          : Minimal W25Qxx Library Source
+ ******************************************************************************
+ * @attention
  *
- * Copyright (c) 2022 Lars Boegild Thomsen <lbthomsen@gmail.com>
+ * Copyright (c) 2022, 2023 Lars Boegild Thomsen <lbthomsen@gmail.com>
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
  *
  * Notice!  The library does _not_ bother to check that sectors have been erased
  * before writing.
  *
+ ******************************************************************************
  */
 
 #include "main.h"
@@ -119,6 +129,11 @@ W25QXX_result_t w25qxx_wait_for_ready(W25QXX_HandleTypeDef *w25qxx, uint32_t tim
     return ret;
 }
 
+#ifdef W25QXX_QSPI
+W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx, QSPI_HandleTypeDef *qhspi) {
+
+}
+#else
 W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx, SPI_HandleTypeDef *hspi, GPIO_TypeDef *cs_port, uint16_t cs_pin) {
 
     W25QXX_result_t result = W25QXX_Ok;
@@ -189,6 +204,7 @@ W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx, SPI_HandleTypeDef *hsp
     return result;
 
 }
+#endif
 
 W25QXX_result_t w25qxx_read(W25QXX_HandleTypeDef *w25qxx, uint32_t address, uint8_t *buf, uint32_t len) {
 
