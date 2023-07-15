@@ -35,6 +35,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define PAGE_SIZE 4096
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -217,7 +218,7 @@ int main(void)
 
     HAL_Delay(10);
 
-    uint8_t buf[w25qxx.page_size]; // Buffer the size of a page
+    uint8_t buf[PAGE_SIZE]; // Buffer the size of a page
 
 //    for (uint8_t run = 0; run <= 2; ++run) {
 //
@@ -342,14 +343,14 @@ int main(void)
             last_blink = now;
         }
 
-        if (now - last_test >= 1000) {
+        if (now - last_test >= 500) {
 
             DBG("---------------\nReading page at address     : 0x%08lx", offset_address);
 
             res = w25qxx_read(&w25qxx, offset_address, (uint8_t*) &buf, sizeof(buf));
             if (res == W25QXX_Ok) {
                 //dump_hex("First page at start", offset_address, (uint8_t*) &buf, sizeof(buf));
-                DBG("Reading old value           : 0x%08lx", HAL_CRC_Calculate(&hcrc, &buf, sizeof(buf) / 4));
+                DBG("Reading old value           : 0x%08lx", HAL_CRC_Calculate(&hcrc, (uint32_t *)&buf, sizeof(buf) / 4));
             } else {
                 DBG("Unable to read w25qxx");
             }
@@ -357,7 +358,7 @@ int main(void)
             // DBG("Erasing page");
             if (w25qxx_erase(&w25qxx, offset_address, sizeof(buf)) == W25QXX_Ok) {
                 if (w25qxx_read(&w25qxx, offset_address, (uint8_t*) &buf, sizeof(buf)) == W25QXX_Ok) {
-                    DBG("After erase                 : 0x%08lx", HAL_CRC_Calculate(&hcrc, &buf, sizeof(buf) / 4));
+                    DBG("After erase                 : 0x%08lx", HAL_CRC_Calculate(&hcrc, (uint32_t *)&buf, sizeof(buf) / 4));
                 }
             }
 
@@ -365,18 +366,20 @@ int main(void)
             fill_buffer(2, buf, sizeof(buf));
 
             // Write it to device
-            DBG("Writing page value          : 0x%08lx", HAL_CRC_Calculate(&hcrc, &buf, sizeof(buf) / 4));
+            DBG("Writing page value          : 0x%08lx", HAL_CRC_Calculate(&hcrc, (uint32_t *)&buf, sizeof(buf) / 4));
             if (w25qxx_write(&w25qxx, offset_address, (uint8_t*) &buf, sizeof(buf)) == W25QXX_Ok) {
                 // now read it back
                 //DBG("Reading page");
                 if (w25qxx_read(&w25qxx, offset_address, (uint8_t*) &buf, sizeof(buf)) == W25QXX_Ok) {
-                    DBG("Reading back                : 0x%08lx", HAL_CRC_Calculate(&hcrc, &buf, sizeof(buf) / 4));
+                    DBG("Reading back                : 0x%08lx", HAL_CRC_Calculate(&hcrc, (uint32_t *)&buf, sizeof(buf) / 4));
                 }
             }
 
             DBG("Test time                   : %lu ms", HAL_GetTick() - now);
 
-            offset_address += 0x20;
+            offset_address += PAGE_SIZE / 4;
+
+            if (offset_address + PAGE_SIZE > w25qxx.block_count * w25qxx.block_size) offset_address = 0;
 
             last_test = now;
         }
