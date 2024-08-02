@@ -22,7 +22,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
-#include <stdbool.h>
 #include <string.h>
 #include "w25qxx.h"
 /* USER CODE END Includes */
@@ -122,27 +121,27 @@ void fill_buffer(uint8_t pattern, uint8_t *buf, uint32_t len) {
     }
 }
 
-bool check_buffer(uint8_t pattern, uint8_t *buf, uint32_t len) {
+uint8_t check_buffer(uint8_t pattern, uint8_t *buf, uint32_t len) {
 
-    bool ret = true;
+    uint8_t ret = 1;
 
     switch (pattern) {
     case 0:
         for (uint32_t i = 0; i < len; ++i) {
             if (buf[i] != 0)
-                ret = false;
+                ret = 0;
         }
         break;
     case 1:
         for (uint32_t i = 0; i < len; ++i) {
             if (buf[i] != 0xaa)
-                ret = false;
+                ret = 0;
         }
         break;
     case 2:
         for (uint32_t i = 0; i < len; ++i) {
             if (buf[i] != i % 256)
-                ret = false;
+                ret = 0;
         }
         break;
     default:
@@ -217,7 +216,7 @@ int main(void)
         DBG("Unable to initialize w25qxx");
     }
 
-    HAL_Delay(10);
+    HAL_Delay(2000);
 
     uint8_t buf[PAGE_SIZE]; // Buffer the size of a page
 
@@ -552,6 +551,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
