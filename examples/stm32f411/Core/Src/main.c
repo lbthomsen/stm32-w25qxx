@@ -146,8 +146,7 @@ bool check_buffer(uint8_t pattern, uint8_t *buf, uint32_t len) {
         }
         break;
     default:
-        DBG("Programmer is a moron")
-        ;
+        DBG("Programmer is a moron");
     }
 
     return ret;
