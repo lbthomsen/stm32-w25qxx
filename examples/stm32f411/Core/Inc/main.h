@@ -65,8 +65,7 @@ void Error_Handler(void);
 /* USER CODE BEGIN Private defines */
 
 #ifdef DEBUG
-#define DBG(...)    printf(__VA_ARGS__);\
-                    printf("\n")
+#define DBG(...)    printf(__VA_ARGS__)
 #else
 #define DBG(...)
 #endif
