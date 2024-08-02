@@ -193,7 +193,7 @@ int main(void)
     MX_CRC_Init();
     /* USER CODE BEGIN 2 */
 
-    DBG("\n\n\n--------\nCore and peripherals has been initialised\n");
+    DBG("\n\n\n--------\nCore and peripherals has been initialized\n");
 
     HAL_Delay(100); // Wait a bit to make sure the w25qxx is ready
 
@@ -282,7 +282,7 @@ int main(void)
     }
     DBG("Done reading - took %lu ms\n", HAL_GetTick() - start);
 
-    DBG("Validating buffer\n");
+    DBG("Validating buffer .... ");
     if (check_buffer(0, buf, sizeof(buf))) {
         DBG("OK\n");
     } else {
@@ -310,7 +310,7 @@ int main(void)
     }
     DBG("Done reading - took %lu ms\n", HAL_GetTick() - start);
 
-    DBG("Validating buffer\n");
+    DBG("Validating buffer ... ");
     if (check_buffer(1, buf, sizeof(buf))) {
         DBG("OK\n");
     } else {
