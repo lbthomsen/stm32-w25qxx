@@ -7,7 +7,7 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2022 STMicroelectronics.
+  * Copyright (c) 2022, 2023, 2024 Lars Boegild Thomsen <lbthomsen@gmail.com>
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
