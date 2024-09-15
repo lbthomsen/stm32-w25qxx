@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include "w25qxx.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -82,6 +83,7 @@ int _write(int fd, char *ptr, int len) {
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -108,7 +110,112 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
-    DBG("\n\n-----------\nStarting...");
+    printf("\n\n-----------\nStarting...\n");
+
+    QSPI_CommandTypeDef sCommand;
+    static uint8_t id[17] = { 0 };
+    static uint8_t tx_buf[0x10] = "Ext Flash";
+    static uint8_t rx_buf[0x10] = { 0 };
+
+    sCommand.DdrMode = QSPI_DDR_MODE_DISABLE;
+    sCommand.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+    sCommand.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+
+    /***** Read ID operation*****/
+    sCommand.Instruction = 0x9F; //READ ID command code
+    sCommand.InstructionMode = QSPI_INSTRUCTION_1_LINE; //Command line width
+    sCommand.AddressMode = QSPI_ADDRESS_NONE; //Address line width. No address phase
+    sCommand.DataMode = QSPI_DATA_1_LINE; //Data line width
+    sCommand.NbData = 17; //Read the data length. ID length is 17 bytes
+    sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE; //No multiplexing byte stage
+    sCommand.DummyCycles = 0; //No Dummy phase
+    //Configuration command (when there is data stage, the command will be sent in the subsequent sending/receiving API call)
+    if (HAL_QSPI_Command(&hqspi, &sCommand, 5000) != HAL_OK) {
+        Error_Handler();
+    }
+    //Execute QSPI reception
+    if (HAL_QSPI_Receive(&hqspi, id, 5000) != HAL_OK) {
+        Error_Handler();
+    }
+
+    /***** Write enable operation (need to make the external memory in the write enable state before block erasing) *****/
+    sCommand.Instruction = 0x06; //Write enable command code
+    sCommand.InstructionMode = QSPI_INSTRUCTION_1_LINE; //Command line width
+    sCommand.AddressMode = QSPI_ADDRESS_NONE; //Address line width. No address phase
+    sCommand.DataMode = QSPI_DATA_NONE; //Data line width. No data stage
+    sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE; //No multiplexing byte stage
+    sCommand.DummyCycles = 0; //No Dummy phase
+    //Configure sending command
+    if (HAL_QSPI_Command(&hqspi, &sCommand, 5000) != HAL_OK) {
+        Error_Handler();
+    }
+
+    /***** Block erase operation*****/
+    sCommand.Instruction = 0xD8; //Sector erase command code
+    sCommand.InstructionMode = QSPI_INSTRUCTION_1_LINE; //Command line width
+    sCommand.AddressMode = QSPI_ADDRESS_1_LINE; //Address line width. No address phase
+    sCommand.AddressSize = QSPI_ADDRESS_24_BITS; //Address length
+    sCommand.Address = 0; //Any address in the sector to be erased.
+    sCommand.DataMode = QSPI_DATA_NONE; //Data line width. No data stage
+    sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE; //No multiplexing byte stage
+    sCommand.DummyCycles = 0; //No Dummy phase
+    //Configure sending command
+    if (HAL_QSPI_Command(&hqspi, &sCommand, 5000) != HAL_OK) {
+        Error_Handler();
+    }
+    HAL_Delay(3000); //Delay 3s. The unit is SysTick timer interrupt period
+
+    /***** Write enable operation (need to make the external memory in the write enable state before block erasing) *****/
+    sCommand.Instruction = 0x06; //Write enable command code
+    sCommand.InstructionMode = QSPI_INSTRUCTION_1_LINE; //Command line width
+    sCommand.AddressMode = QSPI_ADDRESS_NONE; //Address line width. No address phase
+    sCommand.DataMode = QSPI_DATA_NONE; //Data line width. No data stage
+    sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE; //No multiplexing byte stage
+    sCommand.DummyCycles = 0; //No Dummy phase
+    //Configure sending command
+    if (HAL_QSPI_Command(&hqspi, &sCommand, 5000) != HAL_OK) {
+        Error_Handler();
+    }
+
+    /***** Four-wire fast write operation*****/
+    sCommand.Instruction = 0x32; //Quick write command code with four lines
+    sCommand.InstructionMode = QSPI_INSTRUCTION_1_LINE; //Command line width
+    sCommand.AddressMode = QSPI_ADDRESS_1_LINE; //Address line width
+    sCommand.AddressSize = QSPI_ADDRESS_24_BITS; //Address length
+    sCommand.Address = 0; //Write the starting address
+    sCommand.DataMode = QSPI_DATA_4_LINES; //Data line width
+    sCommand.NbData = 10; //write data length
+    sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE; //No multiplexing byte stage
+    sCommand.DummyCycles = 0; //No Dummy phase
+    //Configuration command (when there is data stage, the command will be sent in the subsequent sending/receiving API call)
+    if (HAL_QSPI_Command(&hqspi, &sCommand, 5000) != HAL_OK) {
+        Error_Handler();
+    }
+    //Execute QSPI reception
+    if (HAL_QSPI_Transmit(&hqspi, tx_buf, 5000) != HAL_OK) {
+        Error_Handler();
+    }
+    HAL_Delay(5); //Delay 5ms. The unit is SysTick timer interrupt period
+
+    /***** Four-wire fast read operation*****/
+    sCommand.Instruction = 0x6B; //Quick read command code with four lines
+    sCommand.InstructionMode = QSPI_INSTRUCTION_1_LINE; //Command line width
+    sCommand.AddressMode = QSPI_ADDRESS_1_LINE; //Address line width
+    sCommand.AddressSize = QSPI_ADDRESS_24_BITS; //Address length
+    sCommand.Address = 0; //Start address
+    sCommand.DataMode = QSPI_DATA_4_LINES; //Data line width
+    sCommand.NbData = 10; //Read data length
+    sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE; //No multiplexing byte stage
+    sCommand.DummyCycles = 8; //Dummy phase. N25Q128A13EF840F
+
+    //Configuration command (when there is data stage, the command will be sent in the subsequent sending/receiving API call)
+    if (HAL_QSPI_Command(&hqspi, &sCommand, 5000) != HAL_OK) {
+        Error_Handler();
+    }
+    //Execute QSPI reception
+    if (HAL_QSPI_Receive(&hqspi, rx_buf, 5000) != HAL_OK) {
+        Error_Handler();
+    }
 
   /* USER CODE END 2 */
 
@@ -122,7 +229,7 @@ int main(void)
         now = HAL_GetTick();
 
         if (now - last_tick >= 1000) {
-            DBG("Tick %lu", now / 1000);
+            printf("Tick %lu\n", now / 1000);
             last_tick = now;
         }
 
@@ -200,10 +307,10 @@ static void MX_QUADSPI_Init(void)
   /* USER CODE END QUADSPI_Init 1 */
   /* QUADSPI parameter configuration*/
   hqspi.Instance = QUADSPI;
-  hqspi.Init.ClockPrescaler = 255;
+  hqspi.Init.ClockPrescaler = 10;
   hqspi.Init.FifoThreshold = 1;
   hqspi.Init.SampleShifting = QSPI_SAMPLE_SHIFTING_NONE;
-  hqspi.Init.FlashSize = 1;
+  hqspi.Init.FlashSize = 24;
   hqspi.Init.ChipSelectHighTime = QSPI_CS_HIGH_TIME_1_CYCLE;
   hqspi.Init.ClockMode = QSPI_CLOCK_MODE_0;
   hqspi.Init.FlashID = QSPI_FLASH_ID_1;
