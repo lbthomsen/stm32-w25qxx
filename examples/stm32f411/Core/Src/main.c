@@ -345,7 +345,7 @@ int main(void)
             last_blink = now;
         }
 
-        if (now - last_test >= 500) {
+        if (now - last_test >= 1000) {
 
             DBG("---------------\nReading page at address     : 0x%08lx\n", offset_address);
 
