@@ -37,7 +37,9 @@
  * @retval None
  */
 static inline void cs_on(W25QXX_HandleTypeDef *w25qxx) {
+#ifndef W25QXX_QSPI
     HAL_GPIO_WritePin(w25qxx->cs_port, w25qxx->cs_pin, GPIO_PIN_RESET);
+#endif
 }
 
 /**
@@ -131,20 +133,23 @@ W25QXX_result_t w25qxx_wait_for_ready(W25QXX_HandleTypeDef *w25qxx, uint32_t tim
 
 #ifdef W25QXX_QSPI
 W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx, QSPI_HandleTypeDef *qhspi) {
-
-}
 #else
 W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx, SPI_HandleTypeDef *hspi, GPIO_TypeDef *cs_port, uint16_t cs_pin) {
+#endif
 
     W25QXX_result_t result = W25QXX_Ok;
 
     W25_DBG("w25qxx_init");
 
+#ifdef W25QXX_QSPI
+    w25qxx->qspiHandle = qhspi;
+#else
     w25qxx->spiHandle = hspi;
     w25qxx->cs_port = cs_port;
     w25qxx->cs_pin = cs_pin;
 
     cs_off(w25qxx);
+#endif
 
     uint32_t id = w25qxx_read_id(w25qxx);
     if (id) {
@@ -204,7 +209,6 @@ W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx, SPI_HandleTypeDef *hsp
     return result;
 
 }
-#endif
 
 W25QXX_result_t w25qxx_read(W25QXX_HandleTypeDef *w25qxx, uint32_t address, uint8_t *buf, uint32_t len) {
 
