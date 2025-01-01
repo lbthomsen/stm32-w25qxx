@@ -187,6 +187,9 @@ W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx, SPI_HandleTypeDef *hsp
             case 0x4018:
                 w25qxx->block_count = 0x100;
                 break;
+            case 0x4016:
+                w25qxx->block_count = 0x40;
+                break;
             default:
                 W25_DBG("Unknown Winbond device");
                 result = W25QXX_Err;
