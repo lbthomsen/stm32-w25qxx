@@ -5,7 +5,7 @@
  ******************************************************************************
  * @attention
  *
- * Copyright (c) 2022, 2023, 2024 Lars Boegild Thomsen <lbthomsen@gmail.com>
+ * Copyright (c) 2022 - 2025 Lars Boegild Thomsen <lbthomsen@gmail.com>
  * All rights reserved.
  *
  * This software is licensed under terms that can be found in the LICENSE file
@@ -23,6 +23,7 @@
 #include <string.h>
 
 #ifdef DEBUG
+#include <stdlib.h>
 #include <stdio.h>
 #endif
 
@@ -141,6 +142,12 @@ W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx, SPI_HandleTypeDef *hsp
 
     W25_DBG("w25qxx_init");
 
+    char *version_buffer = malloc(strlen(W25QXX_VERSION) + 1);
+    if (version_buffer) {
+        sprintf(version_buffer, "%s", W25QXX_VERSION);
+        free(version_buffer);
+    }
+
 #ifdef W25QXX_QSPI
     w25qxx->qspiHandle = qhspi;
 #else
@@ -219,7 +226,11 @@ W25QXX_result_t w25qxx_read(W25QXX_HandleTypeDef *w25qxx, uint32_t address, uint
 
     // Transmit buffer holding command and address
     uint8_t tx[4] = {
-    W25QXX_READ_DATA, (uint8_t) (address >> 16), (uint8_t) (address >> 8), (uint8_t) (address), };
+    W25QXX_READ_DATA,
+            (uint8_t) (address >> 16),
+            (uint8_t) (address >> 8),
+            (uint8_t) (address)
+    };
 
     // First wait for device to get ready
     if (w25qxx_wait_for_ready(w25qxx, HAL_MAX_DELAY) != W25QXX_Ok) {
