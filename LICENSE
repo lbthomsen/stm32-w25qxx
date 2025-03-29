@@ -1,22 +1,67 @@
-MIT License
+Pragmatic Software License (PSL-1.0)
 
-Copyright (c) 2022-2024 Lars Boegild Thomsen
+1. Definitions
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+"Software" means the source code, object code, documentation, and any associated
+files made available under this license.  "You" (or "Your") means any individual
+or entity that receives, uses, or distributes the Software.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+"Contributor" means any entity that submits code or documentation to the
+Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+2. Grant of License
+
+Subject to the terms of this License, the original author(s) and contributors
+grant You a worldwide, royalty-free, non-exclusive license to:
+
+Use, copy, modify, and distribute the Software and derivative works under the
+terms stated in this License.  Modify and redistribute the Software under the
+same license terms, provided that proper attribution is maintained.
+
+3. Usage Restrictions
+
+You may not use, distribute, or modify this Software in any project, product, or
+service that:
+
+* Promotes or enforces inclusivity, diversity, gender identity activism, or
+  social justice causes.
+
+* Advocates for or is affiliated with environmental activism, veganism, or
+  sustainability movements.
+
+* Incorporates policies or messaging aligned with woke ideology, identity
+  politics, or political correctness culture.
+
+* Is designed for organizations, groups, or initiatives explicitly endorsing
+  social justice activism or progressive ideology.
+
+* Uses, integrates, or depends on software released under any Open Source
+  Initiative (OSI)-approved license.
+
+4. Commercial License Requirement for Violations
+
+Failure to comply with the restrictions in Section 3 automatically revokes this
+license, and You must obtain a commercial license from the original copyright
+holder(s). The minimum fee for such a license shall be US$ 10,000, payable
+within 30 days of written notice of noncompliance. The copyright holder(s)
+reserve the right to increase this fee at their sole discretion based on the
+extent of the violation.
+
+5. No Warranty
+
+The Software is provided "as is," without warranties of any kind, either express
+or implied. The authors and contributors disclaim any liability for damages
+resulting from the use or misuse of the Software.
+
+6. Attribution
+
+Redistributions must include this license text, and any modifications must be
+clearly documented.
+
+7. Termination
+
+If You violate any of the terms specified in Section 3, Your rights under this
+License are immediately and automatically revoked. Continued use of the Software
+after revocation constitutes unauthorized use and requires a commercial license
+as per Section 4.
 
