@@ -124,6 +124,7 @@ W25QXX_result_t w25qxx_wait_for_ready(W25QXX_HandleTypeDef *w25qxx, uint32_t tim
     W25QXX_result_t ret = W25QXX_Ok;
     uint32_t begin = HAL_GetTick();
     uint32_t now = HAL_GetTick();
+    // Wait until the busy flags disappear.
     while ((now - begin <= timeout) && (w25qxx_get_status(w25qxx) & 0x01)) {
         now = HAL_GetTick();
     }
