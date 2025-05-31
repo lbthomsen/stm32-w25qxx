@@ -199,6 +199,7 @@ int main(void)
     W25QXX_result_t res;
 
     res = w25qxx_init(&w25qxx, &hspi1, SPI1_CS_GPIO_Port, SPI1_CS_Pin);
+
     if (res == W25QXX_Ok) {
         DBG("W25QXX successfully initialized\n");
         DBG("Manufacturer       = 0x%2x\n", w25qxx.manufacturer_id);
@@ -343,7 +344,7 @@ int main(void)
             last_blink = now;
         }
 
-        if (now - last_test >= 1000) {
+        if (now - last_test >= 10000) {
 
             DBG("---------------\nReading page at address     : 0x%08lx\n", offset_address);
 
