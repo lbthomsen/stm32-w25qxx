@@ -1017,8 +1017,8 @@ void Error_Handler(void)
  800094a:	460a      	mov	r2, r1
  800094c:	48a9      	ldr	r0, [pc, #676]	@ (8000bf4 <main+0x344>)
  800094e:	f002 f9f3 	bl	8002d38 <iprintf>
-    HAL_Delay(2000);
- 8000952:	f44f 60fa 	mov.w	r0, #2000	@ 0x7d0
+    HAL_Delay(30000);
+ 8000952:	f247 5030 	movw	r0, #30000	@ 0x7530
  8000956:	f000 fbc3 	bl	80010e0 <HAL_Delay>
     for (uint8_t run = 0; run <= 2; ++run) {
  800095a:	2400      	movs	r4, #0

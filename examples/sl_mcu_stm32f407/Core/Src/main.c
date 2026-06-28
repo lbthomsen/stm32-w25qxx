@@ -215,7 +215,7 @@ int main(void)
         printf("Unable to initialize w25qxx\n");
     }
 
-    HAL_Delay(2000);
+    HAL_Delay(30000);
 
     uint8_t buf[PAGE_SIZE]; // Buffer the size of a page
 
