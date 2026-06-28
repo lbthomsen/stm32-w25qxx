@@ -147,6 +147,7 @@ W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx, SPI_HandleTypeDef *hsp
     if (version_buffer) {
         sprintf(version_buffer, "%s", W25QXX_VERSION);
         free(version_buffer);
+        version_buffer = NULL;
     }
 
 #ifdef W25QXX_QSPI
