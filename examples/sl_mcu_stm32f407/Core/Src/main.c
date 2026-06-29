@@ -194,7 +194,7 @@ int main(void)
 
     printf("\r\n\r\n\r\n--------\nCore and peripherals has been initialized\r\n");
 
-    HAL_Delay(10); // Wait a bit to make sure the w25qxx is ready
+    HAL_Delay(1000); // Wait a bit to make sure the w25qxx is ready
 
     W25QXX_result_t res;
 
@@ -215,7 +215,7 @@ int main(void)
         printf("Unable to initialize w25qxx\n");
     }
 
-    HAL_Delay(30000);
+    HAL_Delay(100);
 
     uint8_t buf[PAGE_SIZE]; // Buffer the size of a page
 
@@ -570,7 +570,7 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pin = SPI1_CS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(SPI1_CS_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */

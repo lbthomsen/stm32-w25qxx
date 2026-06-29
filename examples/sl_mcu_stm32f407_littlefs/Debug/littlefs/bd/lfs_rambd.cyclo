@@ -1,0 +1,7 @@
+../littlefs/bd/lfs_rambd.c:9:5:lfs_rambd_createcfg	4
+../littlefs/bd/lfs_rambd.c:47:5:lfs_rambd_create	1
+../littlefs/bd/lfs_rambd.c:62:5:lfs_rambd_destroy	2
+../littlefs/bd/lfs_rambd.c:73:5:lfs_rambd_read	1
+../littlefs/bd/lfs_rambd.c:92:5:lfs_rambd_prog	3
+../littlefs/bd/lfs_rambd.c:119:5:lfs_rambd_erase	2
+../littlefs/bd/lfs_rambd.c:136:5:lfs_rambd_sync	1
