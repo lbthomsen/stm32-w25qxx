@@ -52,6 +52,11 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 W25QXX_HandleTypeDef w25qxx; // Handler for all w25qxx operations!
+
+lfs_file_t file;
+lfs_dir_t dir;
+struct lfs_info info;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -68,17 +73,14 @@ static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN 0 */
 
 // Send printf to uart1
-int _write(int fd, char *ptr, int len) {
-    HAL_StatusTypeDef hstatus;
-
-    if (fd == 1 || fd == 2) {
-        hstatus = HAL_UART_Transmit(&huart1, (uint8_t*) ptr, len, HAL_MAX_DELAY);
-        if (hstatus == HAL_OK)
-            return len;
-        else
-            return -1;
+int __io_putchar(int ch) {
+    if (ch == '\n') {
+        HAL_UART_Transmit(&huart1, (uint8_t*)"\r", 1, HAL_MAX_DELAY);
     }
-    return -1;
+    if (HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY) != HAL_OK) {
+        return -1;
+    }
+    return ch;
 }
 
 // Dump hex to serial console
@@ -116,7 +118,7 @@ void fill_buffer(uint8_t pattern, uint8_t *buf, uint32_t len) {
             buf[i] = i % 256;
         break;
     default:
-        printf("Programmer is a moron\r\n");
+        printf("Programmer is a moron\n");
     }
 }
 
@@ -144,7 +146,7 @@ uint8_t check_buffer(uint8_t pattern, uint8_t *buf, uint32_t len) {
         }
         break;
     default:
-        printf("Programmer is a moron\r\n");
+        printf("Programmer is a moron\n");
     }
 
     return ret;
@@ -194,7 +196,7 @@ int main(void)
     MX_USART1_UART_Init();
     /* USER CODE BEGIN 2 */
 
-    printf("\r\n\r\n\r\n--------\nCore and peripherals has been initialized\r\n");
+    printf("\n\n\n--------\nCore and peripherals has been initialized\n");
 
     HAL_Delay(10); // Wait a bit to make sure the w25qxx is ready
 
@@ -203,37 +205,86 @@ int main(void)
     res = w25qxx_init(&w25qxx, &hspi1, SPI1_CS_GPIO_Port, SPI1_CS_Pin);
 
     if (res == W25QXX_Ok) {
-        printf("W25QXX successfully initialized\r\n");
-        printf("Manufacturer       = 0x%2x\r\n", w25qxx.manufacturer_id);
-        printf("Device             = 0x%4x\r\n", w25qxx.device_id);
-        printf("Block size         = 0x%04lx (%lu)\r\n", w25qxx.block_size, w25qxx.block_size);
-        printf("Block count        = 0x%04lx (%lu)\r\n", w25qxx.block_count, w25qxx.block_count);
-        printf("Sector size        = 0x%04lx (%lu)\r\n", w25qxx.sector_size, w25qxx.sector_size);
-        printf("Sectors per block  = 0x%04lx (%lu)\r\n", w25qxx.sectors_in_block, w25qxx.sectors_in_block);
-        printf("Page size          = 0x%04lx (%lu)\r\n", w25qxx.page_size, w25qxx.page_size);
-        printf("Pages per sector   = 0x%04lx (%lu)\r\n", w25qxx.pages_in_sector, w25qxx.pages_in_sector);
-        printf("Total size (in kB) = 0x%04lx (%lu)\r\n", (w25qxx.block_count * w25qxx.block_size) / 1024, (w25qxx.block_count * w25qxx.block_size) / 1024);
+        printf("W25QXX successfully initialized\n");
+        printf("Manufacturer       = 0x%2x\n", w25qxx.manufacturer_id);
+        printf("Device             = 0x%4x\n", w25qxx.device_id);
+        printf("Block size         = 0x%04lx (%lu)\n", w25qxx.block_size, w25qxx.block_size);
+        printf("Block count        = 0x%04lx (%lu)\n", w25qxx.block_count, w25qxx.block_count);
+        printf("Sector size        = 0x%04lx (%lu)\n", w25qxx.sector_size, w25qxx.sector_size);
+        printf("Sectors per block  = 0x%04lx (%lu)\n", w25qxx.sectors_in_block, w25qxx.sectors_in_block);
+        printf("Page size          = 0x%04lx (%lu)\n", w25qxx.page_size, w25qxx.page_size);
+        printf("Pages per sector   = 0x%04lx (%lu)\n", w25qxx.pages_in_sector, w25qxx.pages_in_sector);
+        printf("Total size (in kB) = 0x%04lx (%lu)\n", (w25qxx.block_count * w25qxx.block_size) / 1024, (w25qxx.block_count * w25qxx.block_size) / 1024);
     } else {
         printf("Unable to initialize w25qxx\n");
     }
 
     w25qxx_littlefs_init(&w25qxx);
 
+    // read current count
+    uint32_t boot_count = 0;
+
+    if (lfs_file_open(&littlefs, &file, "boot_count", LFS_O_RDWR | LFS_O_CREAT) == LFS_ERR_OK) {
+        if (lfs_file_read(&littlefs, &file, &boot_count, sizeof(boot_count)) >= 0) {
+            // update boot count
+            ++boot_count;
+            lfs_file_rewind(&littlefs, &file);
+            if (lfs_file_write(&littlefs, &file, &boot_count, sizeof(boot_count)) >= 0) {
+                printf("Boot count file updated\n");
+                // remember the storage is not updated until the file is closed successfully
+                lfs_file_close(&littlefs, &file);
+            } else {
+                printf("Unable to write boot count file\n");
+                Error_Handler();
+            }
+        } else {
+            printf("Unable to read boot count file\n");
+            Error_Handler();
+        }
+    } else {
+        printf("Unable to open boot count file\n");
+        Error_Handler();
+    }
+
+    uint32_t start_uptime = 0;
+
+    lfs_file_open(&littlefs, &file, "uptime", LFS_O_RDWR | LFS_O_CREAT);
+    lfs_file_read(&littlefs, &file, &start_uptime, sizeof(start_uptime));
+    lfs_file_close(&littlefs, &file);
+
+    printf("Boot count = %lu start uptime = %lu s\n", boot_count, start_uptime);
+
+
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
-    uint32_t now = 0, last_blink = 0, last_test = 0, offset_address = 0;
+    uint32_t now = 0, next_blink = 0, next_tick = 0;
 
     while (1) {
 
-        now = HAL_GetTick();
+        now = uwTick;
 
-        if (now - last_blink >= 500) {
+        if (now >= next_blink) {
 
             HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 
-            last_blink = now;
+            next_blink = now + 500;
+        }
+
+        if (now >= next_tick) {
+            uint32_t total_uptime = start_uptime + now / 1000;
+
+            uint32_t start = HAL_GetTick();
+            lfs_file_open(&littlefs, &file, "uptime", LFS_O_RDWR);
+            lfs_file_rewind(&littlefs, &file);
+            lfs_file_write(&littlefs, &file, &total_uptime, sizeof(total_uptime));
+            lfs_file_close(&littlefs, &file);
+            printf("File update took %lu ms\n", HAL_GetTick() - start);
+
+            printf("Total uptime = %lu s\n", total_uptime);
+
+            next_tick = now + 1000;
         }
 
 
