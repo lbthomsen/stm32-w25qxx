@@ -11,7 +11,7 @@
 #include "lfs.h"
 #include "w25qxx.h"
 
-#ifdef DEBUG
+#ifdef DEBUGxxx
 #define LFS_DBG(...) printf(__VA_ARGS__);
 #else
 #define LFS_DBG(...) ;
