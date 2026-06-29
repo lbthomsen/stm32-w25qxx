@@ -23,7 +23,9 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include <string.h>
+#include "lfs.h"
 #include "w25qxx.h"
+#include "w25qxx_littlefs.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -215,7 +217,7 @@ int main(void)
         printf("Unable to initialize w25qxx\n");
     }
 
-
+    w25qxx_littlefs_init(&w25qxx);
 
     /* USER CODE END 2 */
 

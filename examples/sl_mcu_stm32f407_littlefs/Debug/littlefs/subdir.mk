@@ -6,18 +6,15 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../littlefs/lfs.c \
-../littlefs/lfs_util.c \
-../littlefs/w25qxx_littlefs.c 
+../littlefs/lfs_util.c 
 
 OBJS += \
 ./littlefs/lfs.o \
-./littlefs/lfs_util.o \
-./littlefs/w25qxx_littlefs.o 
+./littlefs/lfs_util.o 
 
 C_DEPS += \
 ./littlefs/lfs.d \
-./littlefs/lfs_util.d \
-./littlefs/w25qxx_littlefs.d 
+./littlefs/lfs_util.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -27,7 +24,7 @@ littlefs/%.o littlefs/%.su littlefs/%.cyclo: ../littlefs/%.c littlefs/subdir.mk
 clean: clean-littlefs
 
 clean-littlefs:
-	-$(RM) ./littlefs/lfs.cyclo ./littlefs/lfs.d ./littlefs/lfs.o ./littlefs/lfs.su ./littlefs/lfs_util.cyclo ./littlefs/lfs_util.d ./littlefs/lfs_util.o ./littlefs/lfs_util.su ./littlefs/w25qxx_littlefs.cyclo ./littlefs/w25qxx_littlefs.d ./littlefs/w25qxx_littlefs.o ./littlefs/w25qxx_littlefs.su
+	-$(RM) ./littlefs/lfs.cyclo ./littlefs/lfs.d ./littlefs/lfs.o ./littlefs/lfs.su ./littlefs/lfs_util.cyclo ./littlefs/lfs_util.d ./littlefs/lfs_util.o ./littlefs/lfs_util.su
 
 .PHONY: clean-littlefs
 

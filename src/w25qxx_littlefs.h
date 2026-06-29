@@ -8,9 +8,11 @@
 #ifndef W25QXX_LITTLEFS_H_
 #define W25QXX_LITTLEFS_H_
 
-#ifdef DEBUGxxx
-#define LFS_DBG(...) printf(__VA_ARGS__);\
-                     printf("\n");
+#include "lfs.h"
+#include "w25qxx.h"
+
+#ifdef DEBUG
+#define LFS_DBG(...) printf(__VA_ARGS__);
 #else
 #define LFS_DBG(...) ;
 #endif

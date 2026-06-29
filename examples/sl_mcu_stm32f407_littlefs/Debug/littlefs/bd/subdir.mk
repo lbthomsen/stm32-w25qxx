@@ -5,19 +5,19 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../littlefs/bd/lfs_emubd.c \
 ../littlefs/bd/lfs_filebd.c \
-../littlefs/bd/lfs_rambd.c \
-../littlefs/bd/lfs_testbd.c 
+../littlefs/bd/lfs_rambd.c 
 
 OBJS += \
+./littlefs/bd/lfs_emubd.o \
 ./littlefs/bd/lfs_filebd.o \
-./littlefs/bd/lfs_rambd.o \
-./littlefs/bd/lfs_testbd.o 
+./littlefs/bd/lfs_rambd.o 
 
 C_DEPS += \
+./littlefs/bd/lfs_emubd.d \
 ./littlefs/bd/lfs_filebd.d \
-./littlefs/bd/lfs_rambd.d \
-./littlefs/bd/lfs_testbd.d 
+./littlefs/bd/lfs_rambd.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -27,7 +27,7 @@ littlefs/bd/%.o littlefs/bd/%.su littlefs/bd/%.cyclo: ../littlefs/bd/%.c littlef
 clean: clean-littlefs-2f-bd
 
 clean-littlefs-2f-bd:
-	-$(RM) ./littlefs/bd/lfs_filebd.cyclo ./littlefs/bd/lfs_filebd.d ./littlefs/bd/lfs_filebd.o ./littlefs/bd/lfs_filebd.su ./littlefs/bd/lfs_rambd.cyclo ./littlefs/bd/lfs_rambd.d ./littlefs/bd/lfs_rambd.o ./littlefs/bd/lfs_rambd.su ./littlefs/bd/lfs_testbd.cyclo ./littlefs/bd/lfs_testbd.d ./littlefs/bd/lfs_testbd.o ./littlefs/bd/lfs_testbd.su
+	-$(RM) ./littlefs/bd/lfs_emubd.cyclo ./littlefs/bd/lfs_emubd.d ./littlefs/bd/lfs_emubd.o ./littlefs/bd/lfs_emubd.su ./littlefs/bd/lfs_filebd.cyclo ./littlefs/bd/lfs_filebd.d ./littlefs/bd/lfs_filebd.o ./littlefs/bd/lfs_filebd.su ./littlefs/bd/lfs_rambd.cyclo ./littlefs/bd/lfs_rambd.d ./littlefs/bd/lfs_rambd.o ./littlefs/bd/lfs_rambd.su
 
 .PHONY: clean-littlefs-2f-bd
 

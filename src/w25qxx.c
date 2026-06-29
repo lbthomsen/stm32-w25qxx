@@ -5,7 +5,7 @@
  ******************************************************************************
  * @attention
  *
- * Copyright (c) 2022 - 2025 Lars Boegild Thomsen <lbthomsen@gmail.com>
+ * Copyright (c) 2022 - 2026 Lars Boegild Thomsen <lbthomsen@gmail.com>
  * All rights reserved.
  *
  * This software is licensed under terms that can be found in the LICENSE file
