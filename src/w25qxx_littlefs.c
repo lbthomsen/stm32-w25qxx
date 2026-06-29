@@ -6,10 +6,10 @@
  */
 
 
+#include <w25qxx_littlefs.h>
 #include "main.h"
 #include "lfs.h"
 #include "w25qxx.h"
-#include "w25qxx_littlefs.h"
 
 int littlefs_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void *buffer, lfs_size_t size);
 int littlefs_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size);
