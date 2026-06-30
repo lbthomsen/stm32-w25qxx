@@ -4,8 +4,14 @@
  * @brief          : Minimal W25Qxx SPI Library Source
  ******************************************************************************
  * @attention
+ *
  * Copyright (c) 2022 - 2026 Lars Boegild Thomsen <lbthomsen@gmail.com>
  * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
  ******************************************************************************
  */
 
@@ -64,7 +70,7 @@ uint32_t w25qxx_read_id(W25QXX_HandleTypeDef *w25qxx) {
     cs_on(w25qxx);
     if (w25qxx_transmit(w25qxx, &cmd, 1) == W25QXX_Ok) {
         if (w25qxx_receive(w25qxx, buf, 3) == W25QXX_Ok) {
-            ret = ((uint32_t)buf[0] << 16) | ((uint32_t)buf[1] << 8) | buf[2];
+            ret = ((uint32_t) buf[0] << 16) | ((uint32_t) buf[1] << 8) | buf[2];
         }
     }
     cs_off(w25qxx);
@@ -138,7 +144,9 @@ W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx, SPI_HandleTypeDef *hsp
         switch (w25qxx->manufacturer_id) {
         case W25QXX_MANUFACTURER_GIGADEVICE:
             switch (w25qxx->device_id) {
-            case 0x6017: w25qxx->block_count = 0x80; break; // GD25Q64
+            case 0x6017:
+                w25qxx->block_count = 0x80;
+                break; // GD25Q64
             default:
                 W25_DBG("Unknown GigaDevice product ID");
                 result = W25QXX_Err;
@@ -147,9 +155,15 @@ W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx, SPI_HandleTypeDef *hsp
 
         case W25QXX_MANUFACTURER_WINBOND:
             switch (w25qxx->device_id) {
-            case 0x4018: w25qxx->block_count = 0x100; break; // W25Q128
-            case 0x4017: w25qxx->block_count = 0x80;  break; // W25Q64
-            case 0x4016: w25qxx->block_count = 0x40;  break; // W25Q32
+            case 0x4018:
+                w25qxx->block_count = 0x100;
+                break; // W25Q128
+            case 0x4017:
+                w25qxx->block_count = 0x80;
+                break; // W25Q64
+            case 0x4016:
+                w25qxx->block_count = 0x40;
+                break; // W25Q32
             default:
                 W25_DBG("Unknown Winbond product ID");
                 result = W25QXX_Err;
@@ -179,10 +193,10 @@ W25QXX_result_t w25qxx_read(W25QXX_HandleTypeDef *w25qxx, uint32_t address, uint
     }
 
     uint8_t tx[4] = {
-        W25QXX_READ_DATA,
-        (uint8_t) (address >> 16),
-        (uint8_t) (address >> 8),
-        (uint8_t) (address)
+    W25QXX_READ_DATA,
+            (uint8_t) (address >> 16),
+            (uint8_t) (address >> 8),
+            (uint8_t) (address)
     };
 
     W25QXX_result_t ret = W25QXX_Err;
@@ -216,10 +230,10 @@ W25QXX_result_t w25qxx_write(W25QXX_HandleTypeDef *w25qxx, uint32_t address, uin
         }
 
         uint8_t tx[4] = {
-            W25QXX_PAGE_PROGRAM,
-            (uint8_t) (address >> 16),
-            (uint8_t) (address >> 8),
-            (uint8_t) (address)
+        W25QXX_PAGE_PROGRAM,
+                (uint8_t) (address >> 16),
+                (uint8_t) (address >> 8),
+                (uint8_t) (address)
         };
 
         cs_on(w25qxx);
@@ -253,10 +267,10 @@ W25QXX_result_t w25qxx_erase(W25QXX_HandleTypeDef *w25qxx, uint32_t address, uin
         if (w25qxx_write_enable(w25qxx) == W25QXX_Ok) {
             uint32_t sector_start_address = sector * w25qxx->sector_size;
             uint8_t tx[4] = {
-                W25QXX_SECTOR_ERASE,
-                (uint8_t) (sector_start_address >> 16),
-                (uint8_t) (sector_start_address >> 8),
-                (uint8_t) (sector_start_address)
+            W25QXX_SECTOR_ERASE,
+                    (uint8_t) (sector_start_address >> 16),
+                    (uint8_t) (sector_start_address >> 8),
+                    (uint8_t) (sector_start_address)
             };
 
             cs_on(w25qxx);
