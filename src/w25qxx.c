@@ -111,6 +111,13 @@ W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx, SPI_HandleTypeDef *hsp
     W25QXX_result_t result = W25QXX_Ok;
     W25_DBG("w25qxx_init");
 
+    char *version_buffer = malloc(strlen(W25QXX_VERSION) + 1);
+    if (version_buffer) {
+        sprintf(version_buffer, "%s", W25QXX_VERSION);
+        free(version_buffer);
+        version_buffer = NULL;
+    }
+
     w25qxx->spiHandle = hspi;
     w25qxx->cs_port = cs_port;
     w25qxx->cs_pin = cs_pin;
