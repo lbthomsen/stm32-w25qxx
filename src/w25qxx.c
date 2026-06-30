@@ -103,9 +103,6 @@ W25QXX_result_t w25qxx_wait_for_ready(W25QXX_HandleTypeDef *w25qxx, uint32_t tim
         if ((w25qxx_get_status(w25qxx) & 0x01) == 0) {
             return W25QXX_Ok;
         }
-        if (timeout > 50) {
-            HAL_Delay(1); // Yield execution window for longer write/erase loops
-        }
     }
     return W25QXX_Timeout;
 }

@@ -25,6 +25,7 @@
 #include <string.h>
 #include "lfs.h"
 #include "w25qxx.h"
+
 #include "w25qxx_littlefs.h"
 /* USER CODE END Includes */
 
@@ -75,9 +76,9 @@ static void MX_USART1_UART_Init(void);
 // Send printf to uart1
 int __io_putchar(int ch) {
     if (ch == '\n') {
-        HAL_UART_Transmit(&huart1, (uint8_t*)"\r", 1, HAL_MAX_DELAY);
+        HAL_UART_Transmit(&huart1, (uint8_t*) "\r", 1, HAL_MAX_DELAY);
     }
-    if (HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY) != HAL_OK) {
+    if (HAL_UART_Transmit(&huart1, (uint8_t*) &ch, 1, HAL_MAX_DELAY) != HAL_OK) {
         return -1;
     }
     return ch;
@@ -198,7 +199,7 @@ int main(void)
 
     printf("\n\n\n--------\nCore and peripherals has been initialized\n");
 
-    HAL_Delay(10); // Wait a bit to make sure the w25qxx is ready
+    HAL_Delay(100); // Wait a bit to make sure the w25qxx is ready
 
     W25QXX_result_t res;
 
@@ -219,7 +220,7 @@ int main(void)
         printf("Unable to initialize w25qxx\n");
     }
 
-    w25qxx_littlefs_init(&w25qxx);
+    w25qxx_littlefs_init(&w25qxx, 2); // Reserve 2 MB at the beginning of the flash
 
     // read current count
     uint32_t boot_count = 0;
@@ -254,7 +255,6 @@ int main(void)
 
     printf("Boot count = %lu start uptime = %lu s\n", boot_count, start_uptime);
 
-
     /* USER CODE END 2 */
 
     /* Infinite loop */
@@ -275,18 +275,19 @@ int main(void)
         if (now >= next_tick) {
             uint32_t total_uptime = start_uptime + now / 1000;
 
-            uint32_t start = HAL_GetTick();
-            lfs_file_open(&littlefs, &file, "uptime", LFS_O_RDWR);
-            lfs_file_rewind(&littlefs, &file);
-            lfs_file_write(&littlefs, &file, &total_uptime, sizeof(total_uptime));
-            lfs_file_close(&littlefs, &file);
-            printf("File update took %lu ms\n", HAL_GetTick() - start);
+            if (!(total_uptime % 60)) { // Every minute only
+                uint32_t start = HAL_GetTick();
+                lfs_file_open(&littlefs, &file, "uptime", LFS_O_RDWR);
+                lfs_file_rewind(&littlefs, &file);
+                lfs_file_write(&littlefs, &file, &total_uptime, sizeof(total_uptime));
+                lfs_file_close(&littlefs, &file);
+                printf("File update took %lu ms\n", HAL_GetTick() - start);
+            }
 
             printf("Total uptime = %lu s\n", total_uptime);
 
             next_tick = now + 1000;
         }
-
 
         /* USER CODE END WHILE */
 

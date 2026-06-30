@@ -5,8 +5,8 @@
  *      Author: lth
  */
 
-#ifndef W25QXX_LITTLEFS_H_
-#define W25QXX_LITTLEFS_H_
+#ifndef SRC_W25QXX_LITTLEFS_H_
+#define SRC_W25QXX_LITTLEFS_H_
 
 #include "lfs.h"
 #include "w25qxx.h"
@@ -19,6 +19,6 @@
 
 extern lfs_t littlefs;
 
-int w25qxx_littlefs_init(W25QXX_HandleTypeDef *w25qxx_init);
+int w25qxx_littlefs_init(W25QXX_HandleTypeDef *w25qxx_init, uint32_t reserved_mb);
 
-#endif /* W25QXX_LITTLEFS_H_ */
+#endif /* SRC_W25QXX_LITTLEFS_H_ */
