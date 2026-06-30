@@ -1,5 +1,0 @@
-../w25qxx/w25qxx_littlefs.c:145:12:littlefs_sync	1
-../w25qxx/w25qxx_littlefs.c:130:12:littlefs_erase	2
-../w25qxx/w25qxx_littlefs.c:114:12:littlefs_prog	2
-../w25qxx/w25qxx_littlefs.c:99:12:littlefs_read	2
-../w25qxx/w25qxx_littlefs.c:40:5:w25qxx_littlefs_init	5
