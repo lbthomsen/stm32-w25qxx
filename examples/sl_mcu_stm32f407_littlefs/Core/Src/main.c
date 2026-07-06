@@ -199,7 +199,7 @@ int main(void)
 
     printf("\n\n\n--------\nCore and peripherals has been initialized\n");
 
-    HAL_Delay(100); // Wait a bit to make sure the w25qxx is ready
+    HAL_Delay(200); // Wait a bit to make sure the w25qxx is ready
 
     W25QXX_result_t res;
 
@@ -220,7 +220,7 @@ int main(void)
         printf("Unable to initialize w25qxx\n");
     }
 
-    w25qxx_littlefs_init(&w25qxx, 2); // Reserve 2 MB at the beginning of the flash
+    w25qxx_littlefs_init(&w25qxx, 0); // Reserve 2 MB at the beginning of the flash
 
     // read current count
     uint32_t boot_count = 0;
@@ -421,7 +421,7 @@ static void MX_USART1_UART_Init(void)
 
     /* USER CODE END USART1_Init 1 */
     huart1.Instance = USART1;
-    huart1.Init.BaudRate = 2000000;
+    huart1.Init.BaudRate = 921600;
     huart1.Init.WordLength = UART_WORDLENGTH_8B;
     huart1.Init.StopBits = UART_STOPBITS_1;
     huart1.Init.Parity = UART_PARITY_NONE;
