@@ -37,6 +37,9 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define PAGE_SIZE 4096
+
+#define TEST_FILE_BUFFER_SIZE 256
+#define TEST_FILE_SIZE (4 * 128) // Number of buffers
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -254,6 +257,33 @@ int main(void)
     lfs_file_close(&littlefs, &file);
 
     printf("Boot count = %lu start uptime = %lu s\n", boot_count, start_uptime);
+
+    printf("Running speed test\n");
+    if (lfs_file_open(&littlefs, &file, "speed.dat", LFS_O_RDWR | LFS_O_CREAT | LFS_O_TRUNC) == LFS_ERR_OK) {
+
+        lfs_file_rewind(&littlefs, &file);
+
+        uint8_t buf[TEST_FILE_BUFFER_SIZE];
+        for (int i = 0; i < TEST_FILE_BUFFER_SIZE; ++i)
+            buf[i] = (uint8_t) i; // Fill the buffer
+
+        uint32_t start = uwTick;
+
+        for (int i = 0; i < TEST_FILE_SIZE; ++i) {
+
+            lfs_file_write(&littlefs, &file, &buf, sizeof(buf));
+
+        }
+
+        lfs_file_close(&littlefs, &file);
+
+        printf("Write %lu B took %lu ms\n", (uint32_t) (TEST_FILE_SIZE * TEST_FILE_BUFFER_SIZE), uwTick - start);
+
+    } else {
+        printf("Unable to open speed.dat file\n");
+        Error_Handler();
+    }
+
 
     /* USER CODE END 2 */
 

@@ -22,8 +22,7 @@ typedef struct {
 static LFS_DriverContext_t lfs_ctx;
 
 // Maximum expected size for lookahead buffer tracking block usage states.
-// 64 Bytes provides sufficient map bits to support flash partitions larger than 16MB.
-#define LFS_LOOKAHEAD_MAX_SIZE 64
+#define LFS_LOOKAHEAD_MAX_SIZE 16
 static uint8_t lfs_lookahead_buf[LFS_LOOKAHEAD_MAX_SIZE];
 
 // Static forward declarations for LittleFS block device operations
