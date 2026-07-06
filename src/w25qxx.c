@@ -102,17 +102,6 @@ W25QXX_result_t w25qxx_write_enable(W25QXX_HandleTypeDef *w25qxx) {
     return ret;
 }
 
-W25QXX_result_t w25qxx_wait_for_ready(W25QXX_HandleTypeDef *w25qxx, uint32_t timeout) {
-    uint32_t begin = HAL_GetTick();
-
-    while ((HAL_GetTick() - begin) <= timeout) {
-        if ((w25qxx_get_status(w25qxx) & 0x01) == 0) {
-            return W25QXX_Ok;
-        }
-    }
-    return W25QXX_Timeout;
-}
-
 W25QXX_result_t w25qxx_init(W25QXX_HandleTypeDef *w25qxx, SPI_HandleTypeDef *hspi, GPIO_TypeDef *cs_port, uint16_t cs_pin) {
     W25QXX_result_t result = W25QXX_Ok;
     W25_DBG("w25qxx_init");
@@ -299,4 +288,15 @@ W25QXX_result_t w25qxx_chip_erase(W25QXX_HandleTypeDef *w25qxx) {
     cs_off(w25qxx);
 
     return w25qxx_wait_for_ready(w25qxx, 60000); // 60s max hardware limit bound
+}
+
+W25QXX_result_t w25qxx_wait_for_ready(W25QXX_HandleTypeDef *w25qxx, uint32_t timeout) {
+    uint32_t begin = HAL_GetTick();
+
+    while ((HAL_GetTick() - begin) <= timeout) {
+        if ((w25qxx_get_status(w25qxx) & 0x01) == 0) {
+            return W25QXX_Ok;
+        }
+    }
+    return W25QXX_Timeout;
 }

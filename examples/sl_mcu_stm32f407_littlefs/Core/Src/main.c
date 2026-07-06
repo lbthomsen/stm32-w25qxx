@@ -220,7 +220,7 @@ int main(void)
         printf("Unable to initialize w25qxx\n");
     }
 
-    w25qxx_littlefs_init(&w25qxx, 0); // Reserve 2 MB at the beginning of the flash
+    w25qxx_littlefs_init(&w25qxx, 0);
 
     // read current count
     uint32_t boot_count = 0;

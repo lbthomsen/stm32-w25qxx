@@ -8,10 +8,23 @@
  */
 
 #include "w25qxx_littlefs.h"
-
 #include "main.h"
 #include "lfs.h"
 #include "w25qxx.h"
+
+// Define a structured context to cleanly isolate instance hardware and configuration offsets
+typedef struct {
+    W25QXX_HandleTypeDef *hw_handle;
+    uint32_t flash_offset;
+} LFS_DriverContext_t;
+
+// Static driver context tracking runtime configurations
+static LFS_DriverContext_t lfs_ctx;
+
+// Maximum expected size for lookahead buffer tracking block usage states.
+// 64 Bytes provides sufficient map bits to support flash partitions larger than 16MB.
+#define LFS_LOOKAHEAD_MAX_SIZE 64
+static uint8_t lfs_lookahead_buf[LFS_LOOKAHEAD_MAX_SIZE];
 
 // Static forward declarations for LittleFS block device operations
 static int littlefs_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void *buffer, lfs_size_t size);
@@ -19,22 +32,18 @@ static int littlefs_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_
 static int littlefs_erase(const struct lfs_config *c, lfs_block_t block);
 static int littlefs_sync(const struct lfs_config *c);
 
-// Dynamic runtime offset to bypass reserved memory space
-static uint32_t flash_lfs_offset_bytes = 0;
-
 // Global file system and configuration instances
 lfs_t littlefs;
 struct lfs_config littlefs_config = {
-    // Assign hardware callback function pointers
-    .read  = littlefs_read,
-    .prog  = littlefs_prog,
-    .erase = littlefs_erase,
-    .sync  = littlefs_sync,
+        // Assign hardware callback function pointers
+        .read = littlefs_read,
+        .prog = littlefs_prog,
+        .erase = littlefs_erase,
+        .sync = littlefs_sync,
 
-    // Static tuning flags
-    .block_cycles = 500, // Increased to 500 for better wear leveling distribution
-    .context = NULL,     // Filled dynamically on init
-};
+        // Static tuning flags
+        .block_cycles = 500, // Increased to 500 for better wear leveling distribution
+        };
 
 /**
  * @brief  Initializes and mounts LittleFS using the hardware driver dimensions,
@@ -50,18 +59,17 @@ int w25qxx_littlefs_init(W25QXX_HandleTypeDef *w25qxx_init, uint32_t reserved_mb
 
     LFS_DBG("LittleFS: Auto-configuring geometry...\n");
 
-    // 1. Pass the hardware handle into the LittleFS driver context
-    littlefs_config.context = w25qxx_init;
+    // 1. Populate custom context pointer boundaries
+    lfs_ctx.hw_handle = w25qxx_init;
+    lfs_ctx.flash_offset = reserved_mb * 1024 * 1024;
+    littlefs_config.context = &lfs_ctx;
 
     // 2. Map geometry parameters dynamically
     littlefs_config.block_size = w25qxx_init->sector_size;
 
     // Calculate full physical block capabilities
     uint32_t total_blocks = w25qxx_init->sectors_in_block * w25qxx_init->block_count;
-
-    // Calculate byte and block restrictions based on user reservation parameter
-    flash_lfs_offset_bytes = reserved_mb * 1024 * 1024;
-    uint32_t reserved_blocks = flash_lfs_offset_bytes / littlefs_config.block_size;
+    uint32_t reserved_blocks = lfs_ctx.flash_offset / littlefs_config.block_size;
 
     if (reserved_blocks >= total_blocks) {
         LFS_DBG("LittleFS: Critical Error - Reserved space exceeds or equals flash capacity!\n");
@@ -73,7 +81,7 @@ int w25qxx_littlefs_init(W25QXX_HandleTypeDef *w25qxx_init, uint32_t reserved_mb
 
     // 3. Configure optimal I/O transactional boundaries
     littlefs_config.read_size = 16;                     // Small reads prevent unnecessary SPI bus bloating
-    littlefs_config.prog_size = w25qxx_init->page_size; // Matches physical page layout (typically 256B)
+    littlefs_config.prog_size = w25qxx_init->page_size; // Matches physical page layout (typically 256B), safe due to multi-page driver architecture
     littlefs_config.cache_size = w25qxx_init->page_size;
 
     // 4. Calculate lookahead size dynamically (1 bit per block, 32-bit aligned, min 8 bytes)
@@ -82,10 +90,17 @@ int w25qxx_littlefs_init(W25QXX_HandleTypeDef *w25qxx_init, uint32_t reserved_mb
     if (lookahead < 8) {
         lookahead = 8;                                          // Enforce LittleFS minimum criteria
     }
+
+    // Bounds check calculated lookahead up to allocated static limits
+    if (lookahead > LFS_LOOKAHEAD_MAX_SIZE) {
+        lookahead = LFS_LOOKAHEAD_MAX_SIZE;
+    }
+
     littlefs_config.lookahead_size = lookahead;
+    littlefs_config.lookahead_buffer = lfs_lookahead_buf;      // Assign the static lookup allocation map
 
     LFS_DBG("LittleFS: Blk Size: %lu, Blk Count: %lu, Lookahead: %lu, Offset: %lu Bytes\n",
-            littlefs_config.block_size, littlefs_config.block_count, littlefs_config.lookahead_size, flash_lfs_offset_bytes);
+            littlefs_config.block_size, littlefs_config.block_count, littlefs_config.lookahead_size, lfs_ctx.flash_offset);
 
     // 5. Try mounting the filesystem
     int err = lfs_mount(&littlefs, &littlefs_config);
@@ -116,13 +131,18 @@ int w25qxx_littlefs_init(W25QXX_HandleTypeDef *w25qxx_init, uint32_t reserved_mb
  * @brief  LittleFS low-level read wrapper.
  */
 static int littlefs_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void *buffer, lfs_size_t size) {
-    W25QXX_HandleTypeDef *w25qxx = (W25QXX_HandleTypeDef *)c->context;
+    LFS_DriverContext_t *ctx = (LFS_DriverContext_t*) c->context;
     LFS_DBG("LFS Rd: B=0x%04lx, O=0x%04lx, S=0x%04lx\n", block, off, size);
 
-    // Factor in runtime offset partition shift
-    uint32_t raw_address = (block * w25qxx->sector_size) + off + flash_lfs_offset_bytes;
+    // Defensive Guardrail: Ensure requested operations do not spill outside allocated block partitions
+    if (block >= c->block_count) {
+        return LFS_ERR_INVAL;
+    }
 
-    if (w25qxx_read(w25qxx, raw_address, buffer, size) != W25QXX_Ok) {
+    // Factor in runtime offset partition shift
+    uint32_t raw_address = (block * c->block_size) + off + ctx->flash_offset;
+
+    if (w25qxx_read(ctx->hw_handle, raw_address, buffer, size) != W25QXX_Ok) {
         return LFS_ERR_IO;
     }
     return LFS_ERR_OK;
@@ -132,14 +152,19 @@ static int littlefs_read(const struct lfs_config *c, lfs_block_t block, lfs_off_
  * @brief  LittleFS low-level program (write) wrapper.
  */
 static int littlefs_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size) {
-    W25QXX_HandleTypeDef *w25qxx = (W25QXX_HandleTypeDef *)c->context;
+    LFS_DriverContext_t *ctx = (LFS_DriverContext_t*) c->context;
     LFS_DBG("LFS Prg: B=0x%04lx, O=0x%04lx, S=0x%04lx\n", block, off, size);
 
-    // Factor in runtime offset partition shift
-    uint32_t raw_address = (block * w25qxx->sector_size) + off + flash_lfs_offset_bytes;
+    // Defensive Guardrail: Ensure requested operations do not spill outside allocated block partitions
+    if (block >= c->block_count) {
+        return LFS_ERR_INVAL;
+    }
 
-    // Safely discard the const attribute to comply with your driver's signature interface
-    if (w25qxx_write(w25qxx, raw_address, (void *)buffer, size) != W25QXX_Ok) {
+    // Factor in runtime offset partition shift
+    uint32_t raw_address = (block * c->block_size) + off + ctx->flash_offset;
+
+    // Safely discard the const attribute to comply with driver's signature interface
+    if (w25qxx_write(ctx->hw_handle, raw_address, (uint8_t*) buffer, size) != W25QXX_Ok) {
         return LFS_ERR_IO;
     }
     return LFS_ERR_OK;
@@ -149,13 +174,19 @@ static int littlefs_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_
  * @brief  LittleFS low-level sector erase wrapper.
  */
 static int littlefs_erase(const struct lfs_config *c, lfs_block_t block) {
-    W25QXX_HandleTypeDef *w25qxx = (W25QXX_HandleTypeDef *)c->context;
+    LFS_DriverContext_t *ctx = (LFS_DriverContext_t*) c->context;
     LFS_DBG("LFS Ers: B=0x%04lx\n", block);
 
-    // Factor in runtime offset partition shift
-    uint32_t raw_address = (block * w25qxx->sector_size) + flash_lfs_offset_bytes;
+    // Defensive Guardrail: Ensure requested operations do not spill outside allocated block partitions
+    if (block >= c->block_count) {
+        return LFS_ERR_INVAL;
+    }
 
-    if (w25qxx_erase(w25qxx, raw_address, w25qxx->sector_size) != W25QXX_Ok) {
+    // Force exact absolute hardware alignment starting positions
+    uint32_t target_sector_address = (block * c->block_size) + ctx->flash_offset;
+
+    // Clear exactly c->block_size (4096B) to safely align driver tracking parameters
+    if (w25qxx_erase(ctx->hw_handle, target_sector_address, c->block_size) != W25QXX_Ok) {
         return LFS_ERR_IO;
     }
     return LFS_ERR_OK;
@@ -165,8 +196,13 @@ static int littlefs_erase(const struct lfs_config *c, lfs_block_t block) {
  * @brief  LittleFS block device synchronization callback.
  */
 static int littlefs_sync(const struct lfs_config *c) {
-    // Unused for synchronous SPI flash drivers.
-    // If your driver utilizes asynchronous DMA, wait for transmission completion flags here.
+    LFS_DriverContext_t *ctx = (LFS_DriverContext_t*) c->context;
+
+    // Explicitly check and block until physical chip completes internal operations
+    // to safeguard critical power-loss safe synchronization calls.
+    if (w25qxx_wait_for_ready(ctx->hw_handle, 1000) != W25QXX_Ok) {
+        return LFS_ERR_IO;
+    }
     return LFS_ERR_OK;
 }
 
