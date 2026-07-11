@@ -68,17 +68,14 @@ static void MX_CRC_Init(void);
 /* USER CODE BEGIN 0 */
 
 // Send printf to uart1
-int _write(int fd, char *ptr, int len) {
-    HAL_StatusTypeDef hstatus;
-
-    if (fd == 1 || fd == 2) {
-        hstatus = HAL_UART_Transmit(&huart1, (uint8_t*) ptr, len, HAL_MAX_DELAY);
-        if (hstatus == HAL_OK)
-            return len;
-        else
-            return -1;
+int __io_putchar(int ch) {
+    if (ch == '\n') {
+        HAL_UART_Transmit(&huart1, (uint8_t*)"\r", 1, HAL_MAX_DELAY);
     }
-    return -1;
+    if (HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY) != HAL_OK) {
+        return -1;
+    }
+    return ch;
 }
 
 // Dump hex to serial console
@@ -164,7 +161,8 @@ uint32_t get_sum(uint8_t *buf, uint32_t len) {
  * @brief  The application entry point.
  * @retval int
  */
-int main(void) {
+int main(void)
+{
 
     /* USER CODE BEGIN 1 */
 
@@ -398,7 +396,8 @@ int main(void) {
  * @brief System Clock Configuration
  * @retval None
  */
-void SystemClock_Config(void) {
+void SystemClock_Config(void)
+{
     RCC_OscInitTypeDef RCC_OscInitStruct = { 0 };
     RCC_ClkInitTypeDef RCC_ClkInitStruct = { 0 };
 
@@ -418,19 +417,22 @@ void SystemClock_Config(void) {
     RCC_OscInitStruct.PLL.PLLN = 96;
     RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
     RCC_OscInitStruct.PLL.PLLQ = 4;
-    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
+    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+            {
         Error_Handler();
     }
 
     /** Initializes the CPU, AHB and APB buses clocks
      */
-    RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+    RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK
+            | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
     RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
     RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
     RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
     RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK) {
+    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
+            {
         Error_Handler();
     }
 }
@@ -440,7 +442,8 @@ void SystemClock_Config(void) {
  * @param None
  * @retval None
  */
-static void MX_CRC_Init(void) {
+static void MX_CRC_Init(void)
+{
 
     /* USER CODE BEGIN CRC_Init 0 */
 
@@ -450,7 +453,8 @@ static void MX_CRC_Init(void) {
 
     /* USER CODE END CRC_Init 1 */
     hcrc.Instance = CRC;
-    if (HAL_CRC_Init(&hcrc) != HAL_OK) {
+    if (HAL_CRC_Init(&hcrc) != HAL_OK)
+            {
         Error_Handler();
     }
     /* USER CODE BEGIN CRC_Init 2 */
@@ -464,7 +468,8 @@ static void MX_CRC_Init(void) {
  * @param None
  * @retval None
  */
-static void MX_SPI1_Init(void) {
+static void MX_SPI1_Init(void)
+{
 
     /* USER CODE BEGIN SPI1_Init 0 */
 
@@ -486,7 +491,8 @@ static void MX_SPI1_Init(void) {
     hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
     hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
     hspi1.Init.CRCPolynomial = 10;
-    if (HAL_SPI_Init(&hspi1) != HAL_OK) {
+    if (HAL_SPI_Init(&hspi1) != HAL_OK)
+            {
         Error_Handler();
     }
     /* USER CODE BEGIN SPI1_Init 2 */
@@ -500,7 +506,8 @@ static void MX_SPI1_Init(void) {
  * @param None
  * @retval None
  */
-static void MX_USART1_UART_Init(void) {
+static void MX_USART1_UART_Init(void)
+{
 
     /* USER CODE BEGIN USART1_Init 0 */
 
@@ -517,7 +524,8 @@ static void MX_USART1_UART_Init(void) {
     huart1.Init.Mode = UART_MODE_TX_RX;
     huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
     huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-    if (HAL_UART_Init(&huart1) != HAL_OK) {
+    if (HAL_UART_Init(&huart1) != HAL_OK)
+            {
         Error_Handler();
     }
     /* USER CODE BEGIN USART1_Init 2 */
@@ -531,7 +539,8 @@ static void MX_USART1_UART_Init(void) {
  * @param None
  * @retval None
  */
-static void MX_GPIO_Init(void) {
+static void MX_GPIO_Init(void)
+{
     GPIO_InitTypeDef GPIO_InitStruct = { 0 };
     /* USER CODE BEGIN MX_GPIO_Init_1 */
     /* USER CODE END MX_GPIO_Init_1 */
@@ -574,7 +583,8 @@ static void MX_GPIO_Init(void) {
  * @brief  This function is executed in case of error occurrence.
  * @retval None
  */
-void Error_Handler(void) {
+void Error_Handler(void)
+{
     /* USER CODE BEGIN Error_Handler_Debug */
     /* User can add his own implementation to report the HAL error return state */
     __disable_irq();
@@ -582,8 +592,7 @@ void Error_Handler(void) {
     }
     /* USER CODE END Error_Handler_Debug */
 }
-
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.

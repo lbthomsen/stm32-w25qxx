@@ -1,10 +1,18 @@
-/*
- * w25qxx_littlefs.c
+/**
+ ******************************************************************************
+ * @file           : w25qxx_littlefs.c
+ * @brief          : Littlefs on top of w25qxx source
+ ******************************************************************************
+ * @attention
  *
- * Automatically configured LittleFS hardware abstraction layer
- * for W25QXX SPI/QSPI Flash chips with dynamic partitioning.
+ * Copyright (c) 2026 Lars Boegild Thomsen <lbthomsen@gmail.com>
+ * All rights reserved.
  *
- * Minimal RAM footprint, adaptive lookahead, and stateless callbacks.
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
  */
 
 #include "w25qxx_littlefs.h"
