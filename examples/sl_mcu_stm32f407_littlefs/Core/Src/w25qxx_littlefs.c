@@ -112,6 +112,7 @@ int w25qxx_littlefs_init(W25QXX_HandleTypeDef *w25qxx_init, uint32_t reserved_mb
     // 5. Try mounting the filesystem
     int err = lfs_mount(&littlefs, &littlefs_config);
 
+#ifdef LITTLEFS_FORMAT_ON_ERROR // defined in header
     // Reformat automatically if the filesystem is unreadable (unformatted or blank flash)
     if (err) {
         LFS_DBG("LittleFS: Mount failed (%d). Formatting flash partition...\n", err);
@@ -124,6 +125,7 @@ int w25qxx_littlefs_init(W25QXX_HandleTypeDef *w25qxx_init, uint32_t reserved_mb
         // Remount following fresh layout formatting
         err = lfs_mount(&littlefs, &littlefs_config);
     }
+#endif
 
     if (err == LFS_ERR_OK) {
         LFS_DBG("LittleFS: Filesystem mounted successfully.\n");

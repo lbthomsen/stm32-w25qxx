@@ -21,6 +21,8 @@
 #include "lfs.h"
 #include "w25qxx.h"
 
+#define LITTLEFS_FORMAT_ON_ERROR 1
+
 #ifdef DEBUGxxx
 #define LFS_DBG(...) printf(__VA_ARGS__);
 #else
